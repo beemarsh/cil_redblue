@@ -1,9 +1,9 @@
 teams:
   blue:
     computers:
-      c1: 192.168.1.11
+      c1: 131.95.36.17
       c2: 192.168.1.12
-    raspberry_pi: 192.168.1.10
+    raspberry_pi: 131.95.32.127
   red:
     computers:
       c1: 131.95.36.30

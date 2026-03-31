@@ -34,7 +34,7 @@ html, body {
   background: var(--bg);
   color: var(--primary);
   font-family: var(--font);
-  font-size: 16px;
+  font-size: 20px;
   overflow: hidden;
 }
 
@@ -74,10 +74,10 @@ body::before {
 
 header {
   display: grid;
-  grid-template-columns: 280px 1fr 260px;
+  grid-template-columns: 320px 1fr 300px;
   align-items: center;
   gap: 12px;
-  padding: 0 16px;
+  padding: 0 20px;
   border-bottom: var(--border);
   box-shadow: 0 2px 12px #00ff4144;
   background: var(--bg2);
@@ -86,7 +86,7 @@ header {
 
 #main-area {
   display: grid;
-  grid-template-columns: 300px 1fr 320px;
+  grid-template-columns: 320px 1fr;
   overflow: hidden;
   gap: 0;
 }
@@ -111,7 +111,7 @@ header {
 .panel:last-child { border-right: none; }
 
 .panel-title {
-  font-size: 13px;
+  font-size: 17px;
   letter-spacing: 2px;
   color: var(--primary);
   text-shadow: var(--glow);
@@ -141,14 +141,14 @@ header {
   gap: 2px;
 }
 #hdr-title {
-  font-size: 22px;
-  letter-spacing: 3px;
+  font-size: 32px;
+  letter-spacing: 4px;
   color: var(--primary);
   text-shadow: var(--glow);
   line-height: 1.1;
 }
 #hdr-version {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--dim2);
   letter-spacing: 1px;
 }
@@ -156,7 +156,7 @@ header {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 13px;
+  font-size: 16px;
   letter-spacing: 1px;
 }
 .status-dot {
@@ -198,12 +198,12 @@ header {
   min-width: 56px;
 }
 .stat-val {
-  font-size: 24px;
+  font-size: 36px;
   line-height: 1;
   text-shadow: var(--glow);
 }
 .stat-label {
-  font-size: 10px;
+  font-size: 13px;
   letter-spacing: 1px;
   color: var(--dim2);
 }
@@ -211,7 +211,7 @@ header {
 .v-blue { color: var(--blue); text-shadow: var(--glow-blue); }
 .v-all  { color: var(--primary); }
 #hdr-clock {
-  font-size: 20px;
+  font-size: 26px;
   color: var(--primary);
   text-shadow: var(--glow);
   letter-spacing: 2px;
@@ -231,10 +231,10 @@ header {
 #nodes-grid {
   flex: 1;
   overflow-y: auto;
-  padding: 8px;
+  padding: 14px;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 14px;
   align-content: start;
 }
 #nodes-grid::-webkit-scrollbar { width: 4px; }
@@ -244,10 +244,10 @@ header {
 .node-card {
   border: 1px solid var(--dim2);
   background: #000;
-  padding: 8px;
+  padding: 14px;
   position: relative;
   transition: border-color 0.3s, box-shadow 0.3s, background 0.3s;
-  font-size: 14px;
+  font-size: 18px;
 }
 .node-card.idle       { border-color: var(--dim2); }
 .node-card.attacking  {
@@ -278,189 +278,40 @@ header {
   padding-bottom: 4px;
 }
 .team-badge {
-  font-size: 11px;
-  padding: 1px 6px;
-  letter-spacing: 1px;
+  font-size: 14px;
+  padding: 2px 8px;
+  letter-spacing: 2px;
 }
 .team-badge.blue { color: var(--blue); border: 1px solid var(--blue); text-shadow: var(--glow-blue); }
 .team-badge.red  { color: var(--red);  border: 1px solid var(--red);  text-shadow: var(--glow-red); }
 .nc-id {
-  font-size: 15px;
-  letter-spacing: 1px;
+  font-size: 22px;
+  letter-spacing: 2px;
   color: var(--primary);
   text-shadow: var(--glow);
 }
-.nc-ip    { font-size: 12px; color: var(--dim2); margin-bottom: 4px; }
+.nc-ip    { font-size: 16px; color: var(--dim2); margin-bottom: 6px; }
 .nc-status-row {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 14px;
-  margin-bottom: 3px;
+  gap: 8px;
+  font-size: 18px;
+  margin-bottom: 4px;
 }
 .status-dot-sm {
-  width: 7px; height: 7px;
+  width: 10px; height: 10px;
   border-radius: 50%;
   flex-shrink: 0;
 }
 .status-dot-sm.idle       { background: var(--dim2); }
-.status-dot-sm.attacking  { background: var(--attacking); animation: blink .8s infinite; box-shadow: 0 0 6px var(--attacking); }
-.status-dot-sm.under_attack { background: var(--warn); animation: blink .3s infinite; box-shadow: 0 0 8px var(--warn); }
-.nc-detail { font-size: 12px; color: var(--dim2); }
+.status-dot-sm.attacking  { background: var(--attacking); animation: blink .8s infinite; box-shadow: 0 0 8px var(--attacking); }
+.status-dot-sm.under_attack { background: var(--warn); animation: blink .3s infinite; box-shadow: 0 0 10px var(--warn); }
+.nc-detail { font-size: 16px; color: var(--dim2); }
 .nc-detail span { color: var(--attacking); }
-.nc-count { font-size: 12px; color: var(--dim2); }
-.nc-last  { font-size: 11px; color: var(--dim); margin-top: 2px; }
+.nc-count { font-size: 16px; color: var(--dim2); }
+.nc-last  { font-size: 14px; color: var(--dim); margin-top: 4px; }
 
-/* ── right panel ─────────────────────────────────────────────────────── */
-#right-panel {
-  border-right: none;
-  border-left: var(--border);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-/* alert console */
-#alert-section {
-  flex: 0 0 38%;
-  display: flex;
-  flex-direction: column;
-  border-bottom: 1px solid var(--dim2);
-  overflow: hidden;
-}
-#alert-feed {
-  flex: 1;
-  overflow-y: auto;
-  padding: 4px 6px;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-#alert-feed::-webkit-scrollbar { width: 3px; }
-#alert-feed::-webkit-scrollbar-thumb { background: var(--dim2); }
-
-.alert-entry {
-  font-size: 13px;
-  padding: 3px 6px;
-  border-left: 2px solid var(--dim2);
-  background: #000;
-  animation: slide-in .2s ease;
-}
-.alert-entry.sev-low      { border-color: var(--primary); }
-.alert-entry.sev-medium   { border-color: var(--attacking); }
-.alert-entry.sev-high     { border-color: #ff6600; }
-.alert-entry.sev-critical { border-color: var(--warn); animation: slide-in .2s ease, crit-blink .5s infinite alternate; }
 @keyframes slide-in { from{opacity:0;transform:translateX(8px)} to{opacity:1;transform:none} }
-@keyframes crit-blink { from{background:#0a0000} to{background:#1a0000} }
-
-.sev-badge {
-  font-size: 11px;
-  padding: 0 4px;
-  letter-spacing: 1px;
-}
-.sev-badge.low      { color: var(--primary); }
-.sev-badge.medium   { color: var(--attacking); }
-.sev-badge.high     { color: #ff6600; }
-.sev-badge.critical { color: var(--warn); text-shadow: var(--glow-red); }
-
-.alert-ts   { color: var(--dim2); font-size: 12px; }
-.alert-body { color: var(--primary); font-size: 13px; }
-
-/* command form */
-#cmd-section {
-  flex: 0 0 auto;
-  padding: 8px;
-  border-bottom: 1px solid var(--dim2);
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.cmd-title {
-  font-size: 13px;
-  letter-spacing: 2px;
-  color: var(--primary);
-  text-shadow: var(--glow);
-  border-bottom: 1px solid var(--dim2);
-  padding-bottom: 4px;
-  margin-bottom: 4px;
-}
-.cmd-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 6px;
-}
-.cmd-row.full { grid-template-columns: 1fr; }
-.cmd-label { font-size: 11px; color: var(--dim2); letter-spacing: 1px; margin-bottom: 2px; }
-select.term-select {
-  width: 100%;
-  background: #000;
-  color: var(--primary);
-  border: 1px solid var(--dim2);
-  font-family: var(--font);
-  font-size: 14px;
-  padding: 2px 4px;
-  outline: none;
-  cursor: pointer;
-  appearance: none;
-}
-select.term-select:focus { border-color: var(--primary); box-shadow: var(--glow); }
-
-#btn-execute {
-  width: 100%;
-  background: #000;
-  color: var(--primary);
-  border: 1px solid var(--primary);
-  font-family: var(--font);
-  font-size: 17px;
-  letter-spacing: 2px;
-  padding: 5px;
-  cursor: pointer;
-  text-shadow: var(--glow);
-  box-shadow: var(--glow);
-  transition: background .2s, box-shadow .2s;
-}
-#btn-execute:hover { background: var(--dim); box-shadow: 0 0 20px var(--primary); }
-#btn-execute:active { background: var(--dim2); }
-#cmd-feedback {
-  font-size: 13px;
-  color: var(--primary);
-  text-shadow: var(--glow);
-  text-align: center;
-  min-height: 16px;
-  letter-spacing: 1px;
-  transition: opacity .3s;
-}
-
-/* simulate button */
-#sim-section {
-  flex: 0 0 auto;
-  padding: 8px;
-}
-#btn-simulate {
-  width: 100%;
-  background: #000;
-  font-family: var(--font);
-  font-size: 18px;
-  letter-spacing: 2px;
-  padding: 7px;
-  cursor: pointer;
-  transition: all .25s;
-  border: 1px solid var(--primary);
-  color: var(--primary);
-  text-shadow: var(--glow);
-  box-shadow: var(--glow);
-}
-#btn-simulate.running {
-  border-color: var(--warn);
-  color: var(--warn);
-  text-shadow: var(--glow-red);
-  box-shadow: var(--glow-red);
-  animation: sim-pulse .9s ease-in-out infinite alternate;
-}
-@keyframes sim-pulse {
-  from { box-shadow: 0 0 6px var(--warn)77; }
-  to   { box-shadow: 0 0 22px var(--warn)cc; }
-}
 
 /* ── log section ─────────────────────────────────────────────────────── */
 #log-section {
@@ -472,22 +323,22 @@ select.term-select:focus { border-color: var(--primary); box-shadow: var(--glow)
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 13px;
+  font-size: 17px;
   letter-spacing: 2px;
   color: var(--primary);
   text-shadow: var(--glow);
-  padding: 4px 10px;
+  padding: 5px 14px;
   border-bottom: 1px solid var(--dim2);
   flex-shrink: 0;
 }
 #log-feed {
   flex: 1;
   overflow-y: auto;
-  padding: 4px 10px;
+  padding: 6px 14px;
   display: flex;
   flex-direction: column;
   gap: 1px;
-  font-size: 14px;
+  font-size: 17px;
 }
 #log-feed::-webkit-scrollbar { width: 4px; }
 #log-feed::-webkit-scrollbar-thumb { background: var(--dim2); }
@@ -495,45 +346,160 @@ select.term-select:focus { border-color: var(--primary); box-shadow: var(--glow)
 .log-entry {
   display: flex;
   flex-direction: column;
-  padding: 2px 0;
+  padding: 3px 0;
   border-bottom: 1px solid #001a04;
   animation: slide-in .15s ease;
 }
-.log-line1 { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
-.log-ts    { color: var(--dim2); font-size: 13px; flex-shrink: 0; }
+.log-line1 { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+.log-ts    { color: var(--dim2); font-size: 16px; flex-shrink: 0; }
 .log-atk.red  { color: var(--red); }
 .log-atk.blue { color: var(--blue); }
 .log-arrow { color: var(--dim2); }
 .log-tgt   { color: var(--primary); }
-.log-ip    { color: var(--dim2); font-size: 12px; }
+.log-ip    { color: var(--dim2); font-size: 15px; }
 .log-type  {
-  font-size: 12px;
-  padding: 0 5px;
+  font-size: 15px;
+  padding: 0 6px;
   border: 1px solid currentColor;
   letter-spacing: 1px;
 }
 .log-sev {
-  font-size: 11px;
-  padding: 0 4px;
+  font-size: 14px;
+  padding: 0 5px;
   letter-spacing: 1px;
 }
 .log-sev.low      { color: var(--primary); }
 .log-sev.medium   { color: var(--attacking); }
 .log-sev.high     { color: #ff6600; }
 .log-sev.critical { color: var(--warn); }
-.log-line2 { color: var(--dim2); font-size: 12px; padding-left: 100px; }
+.log-line2 { color: var(--dim2); font-size: 15px; padding-left: 110px; }
 .log-ports span { color: #89dceb; }
 
-/* ── warning overlay ─────────────────────────────────────────────────── */
-#warn-overlay {
+/* ── intrusion overlay ───────────────────────────────────────────────── */
+#intrusion-overlay {
   display: none;
   position: fixed; inset: 0;
   z-index: 10000;
-  background: rgba(0,0,0,0.82);
+  background: #060000;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
 }
-#warn-overlay.active { display: flex; }
+#intrusion-overlay.active { display: flex; animation: intrusion-shake .15s ease-in-out 4; }
+#intrusion-overlay::before {
+  content: '';
+  position: fixed; inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(255,0,0,0.06) 3px, rgba(255,0,0,0.06) 6px);
+  animation: intrusion-scan 6s linear infinite;
+}
+@keyframes intrusion-scan { from{background-position:0 0} to{background-position:0 100px} }
+@keyframes intrusion-shake {
+  0%,100% { transform: translateX(0); }
+  20%     { transform: translateX(-10px); }
+  40%     { transform: translateX(10px); }
+  60%     { transform: translateX(-7px); }
+  80%     { transform: translateX(7px); }
+}
+#intrusion-box {
+  width: 80vw;
+  max-width: 900px;
+  border: 2px solid var(--warn);
+  background: #0a0000;
+  padding: 40px 50px;
+  text-align: center;
+  box-shadow: 0 0 40px #ff444499, 0 0 120px #ff444433, inset 0 0 60px #ff000011;
+  animation: intrusion-border-pulse .35s ease-in-out infinite alternate;
+  position: relative;
+}
+#intrusion-box::before { content: '+'; position: absolute; top: 6px; left: 8px; color: var(--warn); font-size: 14px; }
+#intrusion-box::after  { content: '+'; position: absolute; top: 6px; right: 8px; color: var(--warn); font-size: 14px; }
+@keyframes intrusion-border-pulse {
+  from { box-shadow: 0 0 30px #ff444488, 0 0 80px #ff444422,  inset 0 0 40px #ff000011; border-color: #ff2222; }
+  to   { box-shadow: 0 0 60px #ff4444cc, 0 0 160px #ff444455, inset 0 0 80px #ff000022; border-color: #ff6666; }
+}
+#intrusion-title {
+  font-size: 52px;
+  letter-spacing: 6px;
+  color: var(--warn);
+  text-shadow: 0 0 20px #ff4444, 0 0 50px #ff4444;
+  animation: intrusion-blink .5s step-end infinite;
+  margin-bottom: 10px;
+}
+@keyframes intrusion-blink { 50% { opacity: 0.15; } }
+#intrusion-subtitle {
+  font-size: 22px;
+  color: #ff666699;
+  letter-spacing: 4px;
+  margin-bottom: 34px;
+}
+#intrusion-target-label {
+  font-size: 20px;
+  color: var(--dim2);
+  letter-spacing: 3px;
+  margin-bottom: 6px;
+}
+#intrusion-target-name {
+  font-size: 64px;
+  letter-spacing: 8px;
+  color: var(--warn);
+  text-shadow: 0 0 30px #ff4444, 0 0 60px #ff4444;
+  margin-bottom: 8px;
+  line-height: 1;
+}
+#intrusion-target-ip {
+  font-size: 22px;
+  color: #ff666677;
+  letter-spacing: 2px;
+  margin-bottom: 30px;
+}
+#intrusion-attacker {
+  font-size: 26px;
+  color: var(--primary);
+  letter-spacing: 3px;
+  margin-bottom: 8px;
+}
+#intrusion-attacker span { color: var(--red); text-shadow: var(--glow-red); }
+#intrusion-attack-type {
+  display: inline-block;
+  font-size: 28px;
+  letter-spacing: 4px;
+  padding: 6px 20px;
+  border: 2px solid var(--warn);
+  color: var(--warn);
+  text-shadow: var(--glow-red);
+  box-shadow: var(--glow-red);
+  margin-bottom: 16px;
+}
+#intrusion-ports {
+  font-size: 18px;
+  color: #89dceb;
+  letter-spacing: 2px;
+  margin-bottom: 30px;
+  min-height: 24px;
+}
+#intrusion-progress-wrap {
+  width: 100%;
+  height: 6px;
+  background: #1a0000;
+  border: 1px solid #ff444444;
+  margin-bottom: 14px;
+  overflow: hidden;
+}
+#intrusion-progress {
+  height: 100%;
+  background: var(--warn);
+  box-shadow: 0 0 10px var(--warn);
+  transition: width 1s linear;
+}
+#intrusion-dismiss {
+  font-size: 18px;
+  color: #ff666677;
+  letter-spacing: 2px;
+  animation: blink 1.2s infinite;
+}
+/* keep the old warn-box referenced (replaced below) */
 #warn-box {
   border: 2px solid var(--warn);
   background: #0a0000;
@@ -649,12 +615,21 @@ select.term-select:focus { border-color: var(--primary); box-shadow: var(--glow)
   </div>
 </div>
 
-<!-- ── warning overlay ───────────────────────────────────────────────────── -->
-<div id="warn-overlay">
-  <div id="warn-box" onclick="dismissWarning()">
-    <div id="warn-header">!! THREAT DETECTED !!</div>
-    <div id="warn-body"></div>
-    <div id="warn-dismiss">[ CLICK TO DISMISS ]  auto-dismiss in <span id="warn-timer">4</span>s</div>
+<!-- ── intrusion overlay ─────────────────────────────────────────────────── -->
+<div id="intrusion-overlay" onclick="dismissIntrusion()">
+  <div id="intrusion-box">
+    <div id="intrusion-title">!! INTRUSION DETECTED !!</div>
+    <div id="intrusion-subtitle">ACTIVE THREAT ON YOUR NETWORK</div>
+    <div id="intrusion-target-label">TARGET SYSTEM</div>
+    <div id="intrusion-target-name">—</div>
+    <div id="intrusion-target-ip">—</div>
+    <div id="intrusion-attacker">ATTACKER: <span id="itr-attacker">—</span></div>
+    <div id="intrusion-attack-type">—</div>
+    <div id="intrusion-ports"></div>
+    <div id="intrusion-progress-wrap">
+      <div id="intrusion-progress" style="width:100%"></div>
+    </div>
+    <div id="intrusion-dismiss">[ CLICK TO DISMISS ]  RESUMING IN <span id="itr-timer">10</span>s</div>
   </div>
 </div>
 
@@ -708,17 +683,6 @@ select.term-select:focus { border-color: var(--primary); box-shadow: var(--glow)
       <div id="nodes-grid"></div>
     </div>
 
-    <!-- right: alerts + command + sim -->
-    <div class="panel" id="right-panel">
-      <div id="alert-section">
-        <div class="panel-title">// ALERT CONSOLE</div>
-        <div id="alert-feed"></div>
-      </div>
-
-      <div id="sim-section">
-        <button id="btn-simulate" onclick="toggleSim()">[ &#9654; START SIMULATION ]</button>
-      </div>
-    </div>
   </div>
 
   <!-- log section -->
@@ -1036,9 +1000,6 @@ function animateTopoAttack(atkKey, tgtKey, color) {
   if (!tPos && aPos)  tPos = { x: W * 0.82, y: cy };
   if (!aPos || !tPos) return;
 
-  const W = svg.clientWidth || 280, H = svg.clientHeight || 300;
-  const cx = W / 2, cy = H / 2;
-
   // Trace line attacker -> hub -> target
   const trace1 = document.createElementNS(SVG_NS, 'line');
   trace1.setAttribute('x1', aPos.x); trace1.setAttribute('y1', aPos.y);
@@ -1156,25 +1117,7 @@ function updateNodeCards(nodeData) {
   }
 }
 
-/* ── alert console ────────────────────────────────────────────────────── */
-function addAlert(ev) {
-  const feed = document.getElementById('alert-feed');
-  const sev  = ev.severity || 'low';
-  const div  = document.createElement('div');
-  div.className = `alert-entry sev-${sev}${ev.real ? ' real-event' : ''}`;
-
-  const atk    = `${escHtml(ev.attacker_team||'?')}.${escHtml(ev.attacker_computer||'?')}`;
-  const tgt    = `${escHtml(ev.target_team||'?')}.${escHtml(ev.target_computer||'?')}`;
-  const realBadge = ev.real ? '<span class="real-badge">!! REAL !!</span> ' : '';
-  div.innerHTML = `
-    <span class="alert-ts">${escHtml(fmtTime(ev.timestamp))}</span>
-    <span class="sev-badge ${sev}">[${sev.toUpperCase()}]</span>
-    ${realBadge}<span class="alert-body"> ${atk} ──► ${tgt} :: ${escHtml(ev.attack_label||ev.attack_type||'?')}</span>
-  `;
-
-  feed.insertBefore(div, feed.firstChild);
-  while (feed.children.length > 40) feed.removeChild(feed.lastChild);
-}
+/* ── alert console removed — real attacks use intrusion overlay ───────── */
 
 /* ── log ──────────────────────────────────────────────────────────────── */
 function addEventToLog(ev) {
@@ -1219,113 +1162,56 @@ function addEventToLog(ev) {
   document.getElementById('cnt-total').textContent = redCount + blueCount;
 }
 
-/* ── warning overlay ──────────────────────────────────────────────────── */
-function showWarning(ev) {
-  const ov   = document.getElementById('warn-overlay');
-  const body = document.getElementById('warn-body');
-  const atk  = `${ev.attacker_team||'?'}.${ev.attacker_computer||'?'}`;
-  const tgt  = `${ev.target_team||'?'}.${ev.target_computer||'?'}`;
-  body.innerHTML = `
-    ATTACKER: <strong>${escHtml(atk.toUpperCase())}</strong><br>
-    TARGET:   <strong>${escHtml(tgt.toUpperCase())}</strong><br>
-    IP:       ${escHtml(ev.target_ip||'?')}<br>
-    TYPE:     ${escHtml(ev.attack_label||ev.attack_type||'?')}<br>
-    SEVERITY: ${escHtml((ev.severity||'?').toUpperCase())}
-  `;
+/* ── intrusion overlay ────────────────────────────────────────────────── */
+let _intrusionTimer = null;
+let _intrusionCountdown = 10;
+
+function showIntrusionAlert(ev) {
+  const atk = `${ev.attacker_team||'?'}.${ev.attacker_computer||'?'}`;
+  const tgt = `${ev.target_team||'?'}.${ev.target_computer||'?'}`;
+
+  document.getElementById('intrusion-target-name').textContent = tgt.toUpperCase();
+  document.getElementById('intrusion-target-ip').textContent   = ev.target_ip || '—';
+  document.getElementById('itr-attacker').textContent          = atk.toUpperCase();
+  document.getElementById('intrusion-attack-type').textContent = (ev.attack_label || ev.attack_type || '?').toUpperCase();
+
+  const ports = ev.open_ports || [];
+  document.getElementById('intrusion-ports').textContent =
+    ports.length ? 'EXPOSED PORTS: ' + ports.join('  |  ') : '';
+
+  const ov = document.getElementById('intrusion-overlay');
   ov.classList.add('active');
 
-  let countdown = 4;
-  const timerEl = document.getElementById('warn-timer');
-  if (_warnTimer) clearInterval(_warnTimer);
-  _warnTimer = setInterval(() => {
-    countdown--;
-    if (timerEl) timerEl.textContent = countdown;
-    if (countdown <= 0) dismissWarning();
+  // Stop simulation while intrusion is displayed
+  fetch('/api/simulate', {method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({action:'stop'})}).catch(()=>{});
+
+  // Countdown
+  _intrusionCountdown = 10;
+  const prog  = document.getElementById('intrusion-progress');
+  const timer = document.getElementById('itr-timer');
+  prog.style.transition = 'none';
+  prog.style.width = '100%';
+
+  if (_intrusionTimer) clearInterval(_intrusionTimer);
+  _intrusionTimer = setInterval(() => {
+    _intrusionCountdown--;
+    if (timer) timer.textContent = _intrusionCountdown;
+    if (prog)  prog.style.width = (_intrusionCountdown / 10 * 100) + '%';
+    if (_intrusionCountdown <= 0) dismissIntrusion();
   }, 1000);
 }
 
-function dismissWarning() {
-  document.getElementById('warn-overlay').classList.remove('active');
-  if (_warnTimer) { clearInterval(_warnTimer); _warnTimer = null; }
+function dismissIntrusion() {
+  document.getElementById('intrusion-overlay').classList.remove('active');
+  if (_intrusionTimer) { clearInterval(_intrusionTimer); _intrusionTimer = null; }
+  // Restart simulation after dismissal
+  fetch('/api/simulate', {method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({action:'start'})}).catch(()=>{});
 }
 
-/* ── command form ─────────────────────────────────────────────────────── */
-function populateCommandForm(nodeData, atkTypeData) {
-  const fromSel  = document.getElementById('cmd-from');
-  const toSel    = document.getElementById('cmd-to');
-  const atypeSel = document.getElementById('cmd-atype');
 
-  fromSel.innerHTML = '';
-  toSel.innerHTML   = '';
-  for (const [key] of Object.entries(nodeData)) {
-    fromSel.innerHTML += `<option value="${escHtml(key)}">${escHtml(key.toUpperCase())}</option>`;
-    toSel.innerHTML   += `<option value="${escHtml(key)}">${escHtml(key.toUpperCase())}</option>`;
-  }
-
-  atypeSel.innerHTML = '';
-  for (const [key, at] of Object.entries(atkTypeData)) {
-    atypeSel.innerHTML += `<option value="${escHtml(key)}">${escHtml(at.label)} [${escHtml(at.severity)}]</option>`;
-  }
-}
-
-function executeCommand() {
-  const fromVal  = document.getElementById('cmd-from').value;
-  const toVal    = document.getElementById('cmd-to').value;
-  const atypeVal = document.getElementById('cmd-atype').value;
-  const fb       = document.getElementById('cmd-feedback');
-
-  if (!fromVal || !toVal || fromVal === toVal) {
-    fb.textContent = 'ERR: SELECT DIFFERENT FROM/TO NODES';
-    return;
-  }
-
-  const [atkTeam, atkComp] = fromVal.split('.');
-  const [tgtTeam, tgtComp] = toVal.split('.');
-
-  fb.textContent = 'SENDING...';
-  fetch('/api/command', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({
-      attacker_team: atkTeam,
-      attacker_computer: atkComp,
-      target_team: tgtTeam,
-      target_computer: tgtComp,
-      attack_type: atypeVal,
-    }),
-  })
-    .then(r => r.json())
-    .then(() => {
-      fb.textContent = 'COMMAND SENT';
-      setTimeout(() => { fb.textContent = ''; }, 2000);
-    })
-    .catch(() => { fb.textContent = 'ERR: SEND FAILED'; });
-}
-
-/* ── simulation button ────────────────────────────────────────────────── */
-let simRunning = false;
-function updateSimBtn(running) {
-  simRunning = running;
-  const btn = document.getElementById('btn-simulate');
-  if (running) {
-    btn.textContent = '[ \u25A0 STOP SIMULATION ]';
-    btn.classList.add('running');
-  } else {
-    btn.textContent = '[ \u25BA START SIMULATION ]';
-    btn.classList.remove('running');
-  }
-}
-
-function toggleSim() {
-  fetch('/api/simulate', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({action: 'toggle'}),
-  })
-    .then(r => r.json())
-    .then(d => updateSimBtn(d.running))
-    .catch(() => {});
-}
+/* ── simulation button removed — simulation is always on ─────────────── */
 
 /* ── SSE connection ───────────────────────────────────────────────────── */
 function handleSSEMessage(msg) {
@@ -1351,21 +1237,18 @@ function handleSSEMessage(msg) {
     const ev = msg.data;
     if (!ev) return;
     addEventToLog(ev);
-    addAlert(ev);
-    updateNodeCards(nodes); // will be refreshed by 'nodes' message too
 
     const atkKey = `${ev.attacker_team}.${ev.attacker_computer}`;
     const tgtKey = `${ev.target_team}.${ev.target_computer}`;
     animateTopoAttack(atkKey, tgtKey, ev.color);
 
-    // Real attacks spike harder and last longer on the oscilloscope
+    // Real attacks spike harder on the oscilloscope
     const baseMag = ev.severity === 'critical' ? 0.95 : ev.severity === 'high' ? 0.75 :
                     ev.severity === 'medium'   ? 0.55 : 0.35;
     if (window._oscSpike) window._oscSpike(ev.real ? Math.min(1, baseMag + 0.25) : baseMag);
 
-    // Show warning for all real attacks; for sim only on high/critical
-    const sev = ev.severity || 'low';
-    if (ev.real || sev === 'critical' || sev === 'high') showWarning(ev);
+    // Intrusion overlay only for real attacks
+    if (ev.real) showIntrusionAlert(ev);
     return;
   }
 
@@ -1403,31 +1286,24 @@ function connect() {
 
 /* ── init ─────────────────────────────────────────────────────────────── */
 (async function init() {
-  const [nodesRes, atkRes, histRes, cfgRes, simRes] = await Promise.allSettled([
+  const [nodesRes, atkRes, histRes, cfgRes] = await Promise.allSettled([
     fetch('/api/nodes').then(r => r.json()),
     fetch('/api/attack-types').then(r => r.json()),
     fetch('/api/history').then(r => r.json()),
     fetch('/api/config').then(r => r.json()),
-    fetch('/api/simulate/status').then(r => r.json()),
   ]);
 
-  if (cfgRes.status  === 'fulfilled') myTeam   = cfgRes.value.my_team || '';
+  if (cfgRes.status   === 'fulfilled') myTeam   = cfgRes.value.my_team || '';
   if (nodesRes.status === 'fulfilled') nodes    = nodesRes.value;
-  if (atkRes.status  === 'fulfilled')  atkTypes = atkRes.value;
+  if (atkRes.status   === 'fulfilled') atkTypes = atkRes.value;
 
   buildTopology(nodes);
   buildNodeGrid(nodes);
   _builtUI = true;
 
   if (histRes.status === 'fulfilled' && Array.isArray(histRes.value)) {
-    [...histRes.value].reverse().forEach(ev => {
-      addEventToLog(ev);
-      addAlert(ev);
-    });
+    [...histRes.value].reverse().forEach(ev => addEventToLog(ev));
   }
-
-  // Simulation auto-starts on server boot; reflect that in the button
-  if (simRes.status === 'fulfilled') updateSimBtn(simRes.value.running);
 
   connect();
 })();
