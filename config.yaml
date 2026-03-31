@@ -1,0 +1,16 @@
+teams:
+  blue:
+    computers:
+      c1: 192.168.1.11
+      c2: 192.168.1.12
+    raspberry_pi: 192.168.1.10
+  red:
+    computers:
+      c1: 131.95.36.30
+      c2: 131.95.36.22
+    raspberry_pi: 192.168.1.20
+
+settings:
+  log_port: 5000       # Port the Raspberry Pi log server listens on
+  scan_ports: "1-1024" # Port range to scan
+  attack_interval: 60  # Seconds between attacks (when running in loop mode)
