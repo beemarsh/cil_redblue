@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Creates a virtual environment and installs dependencies for the Raspberry Pi.
+# Creates a virtual environment and installs dependencies for team machines.
 #
 # Usage:
-#   ./deploy_pi.sh
+#   ./setup.sh
 
 set -euo pipefail
 
@@ -16,9 +16,9 @@ echo "==> Installing dependencies..."
 "$VENV/bin/pip" install -r requirements.txt
 
 echo ""
-echo "Done. Start the log server with:"
+echo "Done. Activate with:"
 echo "  source $VENV/bin/activate"
-echo "  python3 server.py"
 echo ""
-echo "Then open the dashboard at:"
-echo "  http://$(hostname -I | awk '{print $1}'):5000"
+echo "Then run attacks with:"
+echo "  python3 attack.py --team <blue|red> --computer <c1|c2|...>"
+echo "  python3 attack.py --team <blue|red> --computer <c1|c2|...> --loop"
