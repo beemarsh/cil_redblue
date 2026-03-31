@@ -1,286 +1,1379 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Network Security Monitor</title>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>REDBLUE SECURITY OPS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet"/>
+<style>
+/* ── reset ────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    :root {
-      --bg:       #0a0a0f;
-      --surface:  #111118;
-      --border:   #1e1e2e;
-      --text:     #cdd6f4;
-      --dim:      #585b70;
-      --green:    #a6e3a1;
-      --red:      #f38ba8;
-      --blue:     #89b4fa;
-      --yellow:   #f9e2af;
-      --cyan:     #89dceb;
-    }
+/* ── variables ────────────────────────────────────────────────────────── */
+:root {
+  --bg:        #000;
+  --bg2:       #010a01;
+  --primary:   #00ff41;
+  --dim:       #003a0f;
+  --dim2:      #005a18;
+  --blue:      #89b4fa;
+  --red:       #f38ba8;
+  --warn:      #ff4444;
+  --attacking: #f9e2af;
+  --font:      'VT323', 'Courier New', Courier, monospace;
+  --glow:      0 0 8px #00ff41, 0 0 20px #00ff4155;
+  --glow-red:  0 0 8px #ff4444, 0 0 20px #ff444455;
+  --glow-blue: 0 0 8px #89b4fa, 0 0 20px #89b4fa55;
+  --border:    1px solid #00ff41;
+}
 
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Courier New', Courier, monospace;
-      font-size: 13px;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
+/* ── body / CRT ────────────────────────────────────────────────────────── */
+html, body {
+  height: 100%; width: 100%;
+  background: var(--bg);
+  color: var(--primary);
+  font-family: var(--font);
+  font-size: 16px;
+  overflow: hidden;
+}
 
-    /* ── header ─────────────────────────────────────────────── */
-    header {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 10px 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-shrink: 0;
-    }
+body::after {
+  content: '';
+  position: fixed; inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.18) 2px,
+    rgba(0,0,0,0.18) 4px
+  );
+}
 
-    .logo {
-      font-size: 15px;
-      letter-spacing: 3px;
-      color: var(--green);
-      font-weight: bold;
-    }
+/* vignette */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  pointer-events: none;
+  z-index: 9998;
+  background: radial-gradient(ellipse at center,
+    transparent 60%,
+    rgba(0,0,0,0.7) 100%
+  );
+}
 
-    .stats {
-      display: flex;
-      gap: 28px;
-    }
+/* ── layout ────────────────────────────────────────────────────────────── */
+#app {
+  display: grid;
+  grid-template-rows: 90px 1fr 200px;
+  height: 100vh;
+  width: 100vw;
+}
 
-    .stat { text-align: center; }
-    .stat-val  { font-size: 22px; font-weight: bold; line-height: 1; }
-    .stat-label { font-size: 10px; color: var(--dim); letter-spacing: 1px; margin-top: 2px; }
+header {
+  display: grid;
+  grid-template-columns: 280px 1fr 260px;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+  border-bottom: var(--border);
+  box-shadow: 0 2px 12px #00ff4144;
+  background: var(--bg2);
+  flex-shrink: 0;
+}
 
-    .v-red  { color: var(--red);  }
-    .v-blue { color: var(--blue); }
-    .v-all  { color: var(--green);}
+#main-area {
+  display: grid;
+  grid-template-columns: 300px 1fr 320px;
+  overflow: hidden;
+  gap: 0;
+}
 
-    /* ── status bar ─────────────────────────────────────────── */
-    .status-bar {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 4px 20px;
-      font-size: 11px;
-      color: var(--dim);
-      display: flex;
-      gap: 16px;
-      flex-shrink: 0;
-    }
+#log-section {
+  border-top: var(--border);
+  background: var(--bg2);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
 
-    .dot {
-      display: inline-block;
-      width: 7px; height: 7px;
-      border-radius: 50%;
-      background: var(--green);
-      margin-right: 5px;
-      vertical-align: middle;
-      animation: pulse 1.4s infinite;
-    }
+/* ── panel base ─────────────────────────────────────────────────────────── */
+.panel {
+  border-right: var(--border);
+  background: var(--bg2);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+.panel:last-child { border-right: none; }
 
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50%       { opacity: 0.25; }
-    }
+.panel-title {
+  font-size: 13px;
+  letter-spacing: 2px;
+  color: var(--primary);
+  text-shadow: var(--glow);
+  padding: 6px 10px 4px;
+  border-bottom: 1px solid var(--dim2);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 
-    /* ── feed ───────────────────────────────────────────────── */
-    #feed {
-      flex: 1;
-      overflow-y: auto;
-      padding: 10px 20px 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
+/* corner decorations */
+.panel::before, .panel::after {
+  content: '+';
+  position: absolute;
+  color: var(--primary);
+  font-size: 10px;
+  opacity: 0.5;
+}
+.panel::before { top: 2px; left: 2px; }
+.panel::after  { top: 2px; right: 2px; }
 
-    /* newest event at top — achieved by reversing flex */
-    #feed { flex-direction: column-reverse; }
+/* ── header left ─────────────────────────────────────────────────────── */
+#hdr-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+#hdr-title {
+  font-size: 22px;
+  letter-spacing: 3px;
+  color: var(--primary);
+  text-shadow: var(--glow);
+  line-height: 1.1;
+}
+#hdr-version {
+  font-size: 12px;
+  color: var(--dim2);
+  letter-spacing: 1px;
+}
+#conn-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  letter-spacing: 1px;
+}
+.status-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--primary);
+  box-shadow: var(--glow);
+  flex-shrink: 0;
+  animation: blink 1.4s infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
 
-    .event {
-      border-left: 3px solid;
-      background: var(--surface);
-      padding: 8px 12px;
-      animation: slideIn 0.25s ease;
-    }
+/* ── oscilloscope ────────────────────────────────────────────────────── */
+#osc-wrap {
+  position: relative;
+  height: 60px;
+  align-self: center;
+}
+#osc-canvas {
+  width: 100%;
+  height: 60px;
+  display: block;
+}
 
-    .event.red  { border-color: var(--red);  }
-    .event.blue { border-color: var(--blue); }
+/* ── header right stats ──────────────────────────────────────────────── */
+#hdr-stats {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+.stat-row {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+.stat-item {
+  text-align: center;
+  min-width: 56px;
+}
+.stat-val {
+  font-size: 24px;
+  line-height: 1;
+  text-shadow: var(--glow);
+}
+.stat-label {
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: var(--dim2);
+}
+.v-red  { color: var(--red);  text-shadow: var(--glow-red); }
+.v-blue { color: var(--blue); text-shadow: var(--glow-blue); }
+.v-all  { color: var(--primary); }
+#hdr-clock {
+  font-size: 20px;
+  color: var(--primary);
+  text-shadow: var(--glow);
+  letter-spacing: 2px;
+}
 
-    @keyframes slideIn {
-      from { opacity: 0; transform: translateY(-6px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
+/* ── topology ────────────────────────────────────────────────────────── */
+#topo-panel { }
+#topo-svg {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
 
-    .ev-header {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 5px;
-    }
+/* ── node grid ───────────────────────────────────────────────────────── */
+#nodes-panel { }
+#nodes-grid {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 8px;
+  align-content: start;
+}
+#nodes-grid::-webkit-scrollbar { width: 4px; }
+#nodes-grid::-webkit-scrollbar-track { background: var(--bg); }
+#nodes-grid::-webkit-scrollbar-thumb { background: var(--dim2); }
 
-    .badge {
-      padding: 1px 7px;
-      border-radius: 3px;
-      font-size: 10px;
-      font-weight: bold;
-      letter-spacing: 1px;
-    }
-    .badge.red  { background: var(--red);  color: #11111b; }
-    .badge.blue { background: var(--blue); color: #11111b; }
+.node-card {
+  border: 1px solid var(--dim2);
+  background: #000;
+  padding: 8px;
+  position: relative;
+  transition: border-color 0.3s, box-shadow 0.3s, background 0.3s;
+  font-size: 14px;
+}
+.node-card.idle       { border-color: var(--dim2); }
+.node-card.attacking  {
+  border-color: var(--attacking);
+  box-shadow: 0 0 10px var(--attacking)88;
+  animation: atk-pulse 0.8s ease-in-out infinite alternate;
+}
+.node-card.under_attack {
+  border-color: var(--warn);
+  box-shadow: 0 0 14px var(--warn)aa;
+  background: #0e0000;
+  animation: ua-flash 0.4s ease-in-out infinite alternate;
+}
+@keyframes atk-pulse {
+  from { box-shadow: 0 0 4px var(--attacking)66; }
+  to   { box-shadow: 0 0 16px var(--attacking)cc; }
+}
+@keyframes ua-flash {
+  from { box-shadow: 0 0 6px var(--warn)88; border-color: #ff222288; }
+  to   { box-shadow: 0 0 20px var(--warn)ff; border-color: var(--warn); }
+}
+.nc-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid var(--dim);
+  padding-bottom: 4px;
+}
+.team-badge {
+  font-size: 11px;
+  padding: 1px 6px;
+  letter-spacing: 1px;
+}
+.team-badge.blue { color: var(--blue); border: 1px solid var(--blue); text-shadow: var(--glow-blue); }
+.team-badge.red  { color: var(--red);  border: 1px solid var(--red);  text-shadow: var(--glow-red); }
+.nc-id {
+  font-size: 15px;
+  letter-spacing: 1px;
+  color: var(--primary);
+  text-shadow: var(--glow);
+}
+.nc-ip    { font-size: 12px; color: var(--dim2); margin-bottom: 4px; }
+.nc-status-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  margin-bottom: 3px;
+}
+.status-dot-sm {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.status-dot-sm.idle       { background: var(--dim2); }
+.status-dot-sm.attacking  { background: var(--attacking); animation: blink .8s infinite; box-shadow: 0 0 6px var(--attacking); }
+.status-dot-sm.under_attack { background: var(--warn); animation: blink .3s infinite; box-shadow: 0 0 8px var(--warn); }
+.nc-detail { font-size: 12px; color: var(--dim2); }
+.nc-detail span { color: var(--attacking); }
+.nc-count { font-size: 12px; color: var(--dim2); }
+.nc-last  { font-size: 11px; color: var(--dim); margin-top: 2px; }
 
-    .ts       { color: var(--dim); font-size: 11px; }
-    .attacker { color: var(--text); font-weight: bold; }
-    .arrow    { color: var(--dim); }
-    .target   { color: var(--yellow); }
-    .ip       { color: var(--dim); font-size: 11px; }
+/* ── right panel ─────────────────────────────────────────────────────── */
+#right-panel {
+  border-right: none;
+  border-left: var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
 
-    .ports {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 4px;
-    }
+/* alert console */
+#alert-section {
+  flex: 0 0 38%;
+  display: flex;
+  flex-direction: column;
+  border-bottom: 1px solid var(--dim2);
+  overflow: hidden;
+}
+#alert-feed {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+#alert-feed::-webkit-scrollbar { width: 3px; }
+#alert-feed::-webkit-scrollbar-thumb { background: var(--dim2); }
 
-    .port-tag {
-      background: #1e1e2e;
-      color: var(--cyan);
-      padding: 1px 7px;
-      border-radius: 3px;
-      font-size: 11px;
-    }
+.alert-entry {
+  font-size: 13px;
+  padding: 3px 6px;
+  border-left: 2px solid var(--dim2);
+  background: #000;
+  animation: slide-in .2s ease;
+}
+.alert-entry.sev-low      { border-color: var(--primary); }
+.alert-entry.sev-medium   { border-color: var(--attacking); }
+.alert-entry.sev-high     { border-color: #ff6600; }
+.alert-entry.sev-critical { border-color: var(--warn); animation: slide-in .2s ease, crit-blink .5s infinite alternate; }
+@keyframes slide-in { from{opacity:0;transform:translateX(8px)} to{opacity:1;transform:none} }
+@keyframes crit-blink { from{background:#0a0000} to{background:#1a0000} }
 
-    .no-ports { color: var(--dim); font-size: 11px; font-style: italic; }
+.sev-badge {
+  font-size: 11px;
+  padding: 0 4px;
+  letter-spacing: 1px;
+}
+.sev-badge.low      { color: var(--primary); }
+.sev-badge.medium   { color: var(--attacking); }
+.sev-badge.high     { color: #ff6600; }
+.sev-badge.critical { color: var(--warn); text-shadow: var(--glow-red); }
 
-    /* ── empty state ─────────────────────────────────────────── */
-    #empty {
-      color: var(--dim);
-      text-align: center;
-      margin: auto;
-      font-size: 13px;
-      letter-spacing: 1px;
-    }
-  </style>
+.alert-ts   { color: var(--dim2); font-size: 12px; }
+.alert-body { color: var(--primary); font-size: 13px; }
+
+/* command form */
+#cmd-section {
+  flex: 0 0 auto;
+  padding: 8px;
+  border-bottom: 1px solid var(--dim2);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.cmd-title {
+  font-size: 13px;
+  letter-spacing: 2px;
+  color: var(--primary);
+  text-shadow: var(--glow);
+  border-bottom: 1px solid var(--dim2);
+  padding-bottom: 4px;
+  margin-bottom: 4px;
+}
+.cmd-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+.cmd-row.full { grid-template-columns: 1fr; }
+.cmd-label { font-size: 11px; color: var(--dim2); letter-spacing: 1px; margin-bottom: 2px; }
+select.term-select {
+  width: 100%;
+  background: #000;
+  color: var(--primary);
+  border: 1px solid var(--dim2);
+  font-family: var(--font);
+  font-size: 14px;
+  padding: 2px 4px;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+}
+select.term-select:focus { border-color: var(--primary); box-shadow: var(--glow); }
+
+#btn-execute {
+  width: 100%;
+  background: #000;
+  color: var(--primary);
+  border: 1px solid var(--primary);
+  font-family: var(--font);
+  font-size: 17px;
+  letter-spacing: 2px;
+  padding: 5px;
+  cursor: pointer;
+  text-shadow: var(--glow);
+  box-shadow: var(--glow);
+  transition: background .2s, box-shadow .2s;
+}
+#btn-execute:hover { background: var(--dim); box-shadow: 0 0 20px var(--primary); }
+#btn-execute:active { background: var(--dim2); }
+#cmd-feedback {
+  font-size: 13px;
+  color: var(--primary);
+  text-shadow: var(--glow);
+  text-align: center;
+  min-height: 16px;
+  letter-spacing: 1px;
+  transition: opacity .3s;
+}
+
+/* simulate button */
+#sim-section {
+  flex: 0 0 auto;
+  padding: 8px;
+}
+#btn-simulate {
+  width: 100%;
+  background: #000;
+  font-family: var(--font);
+  font-size: 18px;
+  letter-spacing: 2px;
+  padding: 7px;
+  cursor: pointer;
+  transition: all .25s;
+  border: 1px solid var(--primary);
+  color: var(--primary);
+  text-shadow: var(--glow);
+  box-shadow: var(--glow);
+}
+#btn-simulate.running {
+  border-color: var(--warn);
+  color: var(--warn);
+  text-shadow: var(--glow-red);
+  box-shadow: var(--glow-red);
+  animation: sim-pulse .9s ease-in-out infinite alternate;
+}
+@keyframes sim-pulse {
+  from { box-shadow: 0 0 6px var(--warn)77; }
+  to   { box-shadow: 0 0 22px var(--warn)cc; }
+}
+
+/* ── log section ─────────────────────────────────────────────────────── */
+#log-section {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+#log-title-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  letter-spacing: 2px;
+  color: var(--primary);
+  text-shadow: var(--glow);
+  padding: 4px 10px;
+  border-bottom: 1px solid var(--dim2);
+  flex-shrink: 0;
+}
+#log-feed {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  font-size: 14px;
+}
+#log-feed::-webkit-scrollbar { width: 4px; }
+#log-feed::-webkit-scrollbar-thumb { background: var(--dim2); }
+
+.log-entry {
+  display: flex;
+  flex-direction: column;
+  padding: 2px 0;
+  border-bottom: 1px solid #001a04;
+  animation: slide-in .15s ease;
+}
+.log-line1 { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.log-ts    { color: var(--dim2); font-size: 13px; flex-shrink: 0; }
+.log-atk.red  { color: var(--red); }
+.log-atk.blue { color: var(--blue); }
+.log-arrow { color: var(--dim2); }
+.log-tgt   { color: var(--primary); }
+.log-ip    { color: var(--dim2); font-size: 12px; }
+.log-type  {
+  font-size: 12px;
+  padding: 0 5px;
+  border: 1px solid currentColor;
+  letter-spacing: 1px;
+}
+.log-sev {
+  font-size: 11px;
+  padding: 0 4px;
+  letter-spacing: 1px;
+}
+.log-sev.low      { color: var(--primary); }
+.log-sev.medium   { color: var(--attacking); }
+.log-sev.high     { color: #ff6600; }
+.log-sev.critical { color: var(--warn); }
+.log-line2 { color: var(--dim2); font-size: 12px; padding-left: 100px; }
+.log-ports span { color: #89dceb; }
+
+/* ── warning overlay ─────────────────────────────────────────────────── */
+#warn-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  z-index: 10000;
+  background: rgba(0,0,0,0.82);
+  align-items: center;
+  justify-content: center;
+}
+#warn-overlay.active { display: flex; }
+#warn-box {
+  border: 2px solid var(--warn);
+  background: #0a0000;
+  padding: 28px 36px;
+  max-width: 460px;
+  text-align: center;
+  box-shadow: var(--glow-red), 0 0 60px var(--warn)44;
+  animation: warn-border .4s ease-in-out infinite alternate;
+  cursor: pointer;
+}
+@keyframes warn-border {
+  from { border-color: #ff444488; box-shadow: 0 0 10px #ff444466; }
+  to   { border-color: var(--warn); box-shadow: var(--glow-red), 0 0 60px var(--warn)44; }
+}
+#warn-header {
+  font-size: 30px;
+  color: var(--warn);
+  text-shadow: var(--glow-red);
+  letter-spacing: 3px;
+  margin-bottom: 16px;
+  animation: blink .5s infinite;
+}
+#warn-body { font-size: 16px; color: var(--primary); line-height: 1.7; }
+#warn-dismiss { font-size: 12px; color: var(--dim2); margin-top: 14px; letter-spacing: 1px; }
+
+/* ── boot overlay ────────────────────────────────────────────────────── */
+#boot-overlay {
+  position: fixed; inset: 0;
+  z-index: 20000;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity .8s ease;
+}
+#boot-overlay.fade-out { opacity: 0; pointer-events: none; }
+#boot-box {
+  font-size: 17px;
+  letter-spacing: 1px;
+  line-height: 2;
+  color: var(--primary);
+  text-shadow: var(--glow);
+  min-width: 420px;
+}
+.boot-line { opacity: 0; transition: opacity .15s; }
+.boot-line.visible { opacity: 1; }
+.boot-ok { color: var(--primary); }
+
+/* ── topology SVG ────────────────────────────────────────────────────── */
+.topo-node-ring {
+  stroke-width: 2;
+  fill: none;
+}
+.topo-node-ring.blue { stroke: var(--blue); }
+.topo-node-ring.red  { stroke: var(--red); }
+.topo-node-fill { fill-opacity: 0.15; }
+.topo-node-fill.blue { fill: var(--blue); }
+.topo-node-fill.red  { fill: var(--red); }
+.topo-node-label { font-family: var(--font); font-size: 13px; text-anchor: middle; }
+.topo-node-label.blue { fill: var(--blue); }
+.topo-node-label.red  { fill: var(--red); }
+.topo-link { stroke: var(--dim2); stroke-dasharray: 5,4; stroke-width: 1; fill: none; }
+.topo-hub  { fill: none; stroke: var(--primary); stroke-width: 2; }
+.topo-hub-fill { fill: var(--dim); fill-opacity: 0.5; }
+
+/* pulsing node animation */
+.node-pulse { animation: node-idle-pulse 3s ease-in-out infinite alternate; }
+.node-atk   { animation: node-atk-anim .6s ease-in-out infinite alternate; }
+.node-ua    { animation: node-ua-anim .3s ease-in-out infinite alternate; }
+@keyframes node-idle-pulse { from{opacity:.5} to{opacity:1} }
+@keyframes node-atk-anim   { from{opacity:.7} to{opacity:1} }
+@keyframes node-ua-anim    { from{opacity:.4} to{opacity:1} }
+
+/* scrollbars */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--dim2); }
+</style>
 </head>
 <body>
 
-<header>
-  <div class="logo">[ NETWORK SECURITY MONITOR ]</div>
-  <div class="stats">
-    <div class="stat">
-      <div class="stat-val v-red"  id="cnt-red">0</div>
-      <div class="stat-label">RED ATTACKS</div>
+<!-- ── boot overlay ──────────────────────────────────────────────────────── -->
+<div id="boot-overlay">
+  <div id="boot-box">
+    <div class="boot-line" id="bl-0">INITIALIZING REDBLUE SECURITY SYSTEM...</div>
+    <div class="boot-line" id="bl-1">LOADING NETWORK CONFIG... <span class="boot-ok">[OK]</span></div>
+    <div class="boot-line" id="bl-2">CONNECTING TO NODE GRID... <span class="boot-ok">[OK]</span></div>
+    <div class="boot-line" id="bl-3">ESTABLISHING SECURE CHANNELS... <span class="boot-ok">[OK]</span></div>
+    <div class="boot-line" id="bl-4">LAUNCHING SURVEILLANCE PROTOCOLS... <span class="boot-ok">[OK]</span></div>
+    <div class="boot-line" id="bl-5"><strong>SYSTEM READY</strong></div>
+  </div>
+</div>
+
+<!-- ── warning overlay ───────────────────────────────────────────────────── -->
+<div id="warn-overlay">
+  <div id="warn-box" onclick="dismissWarning()">
+    <div id="warn-header">!! THREAT DETECTED !!</div>
+    <div id="warn-body"></div>
+    <div id="warn-dismiss">[ CLICK TO DISMISS ]  auto-dismiss in <span id="warn-timer">4</span>s</div>
+  </div>
+</div>
+
+<!-- ── main app ───────────────────────────────────────────────────────────── -->
+<div id="app">
+
+  <!-- header -->
+  <header>
+    <div id="hdr-left">
+      <div id="hdr-title">REDBLUE SEC OPS</div>
+      <div id="hdr-version">v2.0 // SURVEILLANCE ACTIVE</div>
+      <div id="conn-indicator">
+        <div class="status-dot" id="conn-dot"></div>
+        <span id="conn-status">CONNECTING...</span>
+      </div>
     </div>
-    <div class="stat">
-      <div class="stat-val v-blue" id="cnt-blue">0</div>
-      <div class="stat-label">BLUE ATTACKS</div>
+    <div id="osc-wrap">
+      <canvas id="osc-canvas"></canvas>
     </div>
-    <div class="stat">
-      <div class="stat-val v-all"  id="cnt-total">0</div>
-      <div class="stat-label">TOTAL EVENTS</div>
+    <div id="hdr-stats">
+      <div class="stat-row">
+        <div class="stat-item">
+          <div class="stat-val v-red"  id="cnt-red">0</div>
+          <div class="stat-label">RED ATTACKS</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-val v-blue" id="cnt-blue">0</div>
+          <div class="stat-label">BLUE ATTACKS</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-val v-all"  id="cnt-total">0</div>
+          <div class="stat-label">TOTAL EVENTS</div>
+        </div>
+      </div>
+      <div id="hdr-clock">--:--:--</div>
+    </div>
+  </header>
+
+  <!-- main 3-col area -->
+  <div id="main-area">
+
+    <!-- left: topology -->
+    <div class="panel" id="topo-panel">
+      <div class="panel-title">// NETWORK TOPOLOGY</div>
+      <svg id="topo-svg" xmlns="http://www.w3.org/2000/svg"></svg>
+    </div>
+
+    <!-- center: node status -->
+    <div class="panel" id="nodes-panel">
+      <div class="panel-title">// NODE STATUS</div>
+      <div id="nodes-grid"></div>
+    </div>
+
+    <!-- right: alerts + command + sim -->
+    <div class="panel" id="right-panel">
+      <div id="alert-section">
+        <div class="panel-title">// ALERT CONSOLE</div>
+        <div id="alert-feed"></div>
+      </div>
+
+      <div id="cmd-section">
+        <div class="cmd-title">// EXECUTE COMMAND</div>
+        <div class="cmd-row">
+          <div>
+            <div class="cmd-label">FROM NODE</div>
+            <select class="term-select" id="cmd-from"></select>
+          </div>
+          <div>
+            <div class="cmd-label">TO NODE</div>
+            <select class="term-select" id="cmd-to"></select>
+          </div>
+        </div>
+        <div class="cmd-row full">
+          <div>
+            <div class="cmd-label">ATTACK TYPE</div>
+            <select class="term-select" id="cmd-atype"></select>
+          </div>
+        </div>
+        <button id="btn-execute" onclick="executeCommand()">[ EXECUTE ]</button>
+        <div id="cmd-feedback"></div>
+      </div>
+
+      <div id="sim-section">
+        <button id="btn-simulate" onclick="toggleSim()">[ &#9654; START SIMULATION ]</button>
+      </div>
     </div>
   </div>
-</header>
 
-<div class="status-bar">
-  <span><span class="dot" id="dot"></span><span id="conn-status">CONNECTING...</span></span>
-  <span id="last-event">no events yet</span>
-</div>
-
-<div id="feed">
-  <div id="empty">Waiting for events&hellip;</div>
-</div>
+  <!-- log section -->
+  <div id="log-section">
+    <div id="log-title-bar">
+      // ACTIVITY LOG
+      <span id="log-counter" style="color:var(--dim2)">[0]</span>
+    </div>
+    <div id="log-feed"></div>
+  </div>
+</div><!-- #app -->
 
 <script>
-  let redCount = 0, blueCount = 0;
+"use strict";
 
-  function fmt(iso) {
-    return new Date(iso).toLocaleTimeString([], { hour12: false });
+/* ── utilities ────────────────────────────────────────────────────────── */
+function escHtml(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+
+function fmtTime(iso) {
+  try {
+    return new Date(iso).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false});
+  } catch { return '--:--:--'; }
+}
+
+function fmtHms(d) {
+  return d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false});
+}
+
+/* ── state ────────────────────────────────────────────────────────────── */
+let nodes     = {};    // key -> node obj
+let atkTypes  = {};    // key -> {label, severity, color}
+let logCount  = 0;
+let redCount  = 0, blueCount = 0;
+let _builtUI  = false;
+let _warnTimer = null;
+
+/* ── clock ────────────────────────────────────────────────────────────── */
+(function clock() {
+  document.getElementById('hdr-clock').textContent = fmtHms(new Date());
+  setTimeout(clock, 1000);
+})();
+
+/* ── boot sequence ────────────────────────────────────────────────────── */
+(function boot() {
+  const lines = Array.from(document.querySelectorAll('.boot-line'));
+  let i = 0;
+  function showNext() {
+    if (i < lines.length) {
+      lines[i].classList.add('visible');
+      i++;
+      setTimeout(showNext, 210);
+    } else {
+      setTimeout(() => {
+        const ov = document.getElementById('boot-overlay');
+        ov.classList.add('fade-out');
+        setTimeout(() => ov.remove(), 900);
+      }, 1400);
+    }
+  }
+  showNext();
+})();
+
+/* ── oscilloscope ─────────────────────────────────────────────────────── */
+(function oscInit() {
+  const canvas = document.getElementById('osc-canvas');
+  const wrap   = document.getElementById('osc-wrap');
+  const ctx    = canvas.getContext('2d');
+  const W_BASE = 600;
+  let W = W_BASE, H = 60;
+  let data = new Float32Array(W_BASE).fill(0.5);
+  let pendingSpike = 0;
+
+  function resize() {
+    W = wrap.clientWidth || W_BASE;
+    canvas.width  = W;
+    canvas.height = H;
+    // resize data buffer preserving values
+    const prev = data;
+    data = new Float32Array(W).fill(0.5);
+    for (let i = 0; i < Math.min(prev.length, W); i++) data[i] = prev[i];
+  }
+  resize();
+  new ResizeObserver(resize).observe(wrap);
+
+  function addSpike(magnitude) {
+    pendingSpike = Math.min(1, (pendingSpike || 0) + magnitude);
+  }
+  window._oscSpike = addSpike;
+
+  function draw() {
+    // shift data left
+    for (let i = 0; i < W - 1; i++) data[i] = data[i+1];
+    // new sample: idle noise + spike
+    let sample = 0.5 + (Math.random() - 0.5) * 0.04;
+    if (pendingSpike > 0.01) {
+      sample = 0.5 + (pendingSpike * 0.42 * (Math.random() > 0.5 ? 1 : -1));
+      pendingSpike *= 0.72;
+    } else {
+      pendingSpike = 0;
+    }
+    data[W - 1] = Math.max(0.02, Math.min(0.98, sample));
+
+    // draw background grid
+    ctx.clearRect(0, 0, W, H);
+    ctx.strokeStyle = '#001a04';
+    ctx.lineWidth = 1;
+    for (let y = 0; y < H; y += 12) {
+      ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke();
+    }
+    for (let x = 0; x < W; x += 40) {
+      ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke();
+    }
+
+    // afterglow trace
+    ctx.beginPath();
+    ctx.strokeStyle = '#003a0f88';
+    ctx.lineWidth = 1;
+    for (let i = 0; i < W; i++) {
+      const y = H - data[i] * H;
+      i === 0 ? ctx.moveTo(i, y) : ctx.lineTo(i, y);
+    }
+    ctx.stroke();
+
+    // bright trace
+    ctx.beginPath();
+    ctx.strokeStyle = '#00ff41';
+    ctx.lineWidth = 1.5;
+    ctx.shadowColor = '#00ff41';
+    ctx.shadowBlur = 4;
+    for (let i = 0; i < W; i++) {
+      const y = H - data[i] * H;
+      i === 0 ? ctx.moveTo(i, y) : ctx.lineTo(i, y);
+    }
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+/* ── topology ─────────────────────────────────────────────────────────── */
+const SVG_NS = 'http://www.w3.org/2000/svg';
+let topoNodePositions = {};   // key -> {x,y}
+
+function buildTopology(nodeData) {
+  const svg  = document.getElementById('topo-svg');
+  svg.innerHTML = '';
+  const W    = svg.clientWidth  || 280;
+  const H    = svg.clientHeight || 300;
+  const cx   = W / 2, cy = H / 2;
+  topoNodePositions = {};
+
+  // Group by team
+  const byTeam = {};
+  for (const [k, n] of Object.entries(nodeData)) {
+    byTeam[n.team] = byTeam[n.team] || [];
+    byTeam[n.team].push({key: k, ...n});
+  }
+  const teamNames = Object.keys(byTeam);
+
+  // Assign sides: first team left, second right, extras spread
+  const sides = {};
+  teamNames.forEach((t, i) => { sides[t] = i === 0 ? 'left' : 'right'; });
+
+  // Position nodes
+  for (const [team, ns] of Object.entries(byTeam)) {
+    const side = sides[team];
+    const xBase = side === 'left' ? W * 0.2 : W * 0.8;
+    const count = ns.length;
+    ns.forEach((n, i) => {
+      const yStep = H / (count + 1);
+      const y = yStep * (i + 1);
+      topoNodePositions[n.key] = {x: xBase, y};
+    });
   }
 
-  function renderEvent(e) {
-    const empty = document.getElementById("empty");
-    if (empty) empty.remove();
+  // Draw hub
+  const hubG = document.createElementNS(SVG_NS, 'g');
+  const hubSize = 10;
+  const hubPoly = document.createElementNS(SVG_NS, 'polygon');
+  const pts = [
+    `${cx},${cy - hubSize}`,
+    `${cx + hubSize},${cy}`,
+    `${cx},${cy + hubSize}`,
+    `${cx - hubSize},${cy}`,
+  ].join(' ');
+  hubPoly.setAttribute('points', pts);
+  hubPoly.setAttribute('class', 'topo-hub-fill');
+  const hubRing = document.createElementNS(SVG_NS, 'polygon');
+  hubRing.setAttribute('points', pts);
+  hubRing.setAttribute('class', 'topo-hub');
+  hubRing.style.filter = 'drop-shadow(0 0 6px #00ff41)';
+  hubG.appendChild(hubPoly);
+  hubG.appendChild(hubRing);
 
-    const feed = document.getElementById("feed");
-    const div  = document.createElement("div");
-    div.className = `event ${e.attacker_team}`;
+  // Draw links first
+  const linksG = document.createElementNS(SVG_NS, 'g');
+  for (const [key, pos] of Object.entries(topoNodePositions)) {
+    const line = document.createElementNS(SVG_NS, 'line');
+    line.setAttribute('x1', pos.x); line.setAttribute('y1', pos.y);
+    line.setAttribute('x2', cx);    line.setAttribute('y2', cy);
+    line.setAttribute('class', 'topo-link');
+    linksG.appendChild(line);
+  }
+  svg.appendChild(linksG);
+  svg.appendChild(hubG);
 
-    const ports = (e.open_ports || []);
-    const portsHtml = ports.length
-      ? ports.map(p => `<span class="port-tag">${escHtml(p)}</span>`).join("")
-      : `<span class="no-ports">no open ports found</span>`;
+  // Draw nodes
+  for (const [key, pos] of Object.entries(topoNodePositions)) {
+    const n    = nodeData[key];
+    const team = n.team;
+    const g    = document.createElementNS(SVG_NS, 'g');
+    g.setAttribute('id', `topo-node-${key.replace('.','_')}`);
 
-    div.innerHTML = `
-      <div class="ev-header">
-        <span class="badge ${e.attacker_team}">${e.attacker_team.toUpperCase()}</span>
-        <span class="ts">${fmt(e.timestamp)}</span>
-        <span class="attacker">${escHtml(e.attacker_team)}.${escHtml(e.attacker_computer)}</span>
-        <span class="arrow">──▶</span>
-        <span class="target">${escHtml(e.target_team)}.${escHtml(e.target_computer)}</span>
-        <span class="ip">(${escHtml(e.target_ip)})</span>
-      </div>
-      <div class="ports">${portsHtml}</div>
-    `;
+    const fill = document.createElementNS(SVG_NS, 'circle');
+    fill.setAttribute('cx', pos.x); fill.setAttribute('cy', pos.y); fill.setAttribute('r', 14);
+    fill.setAttribute('class', `topo-node-fill ${team}`);
 
-    // prepend = newest on top (feed is column-reverse so append = visual top)
-    feed.appendChild(div);
+    const ring = document.createElementNS(SVG_NS, 'circle');
+    ring.setAttribute('cx', pos.x); ring.setAttribute('cy', pos.y); ring.setAttribute('r', 14);
+    ring.setAttribute('class', `topo-node-ring ${team} node-pulse`);
+    ring.style.filter = team === 'blue'
+      ? 'drop-shadow(0 0 6px #89b4fa)'
+      : 'drop-shadow(0 0 6px #f38ba8)';
 
-    // Trim to 60 visible events
-    while (feed.children.length > 60) feed.removeChild(feed.firstChild);
+    const label = document.createElementNS(SVG_NS, 'text');
+    label.setAttribute('x', pos.x); label.setAttribute('y', pos.y + 28);
+    label.setAttribute('class', `topo-node-label ${team}`);
+    label.textContent = key.toUpperCase();
 
-    if (e.attacker_team === "red") redCount++;
-    else blueCount++;
+    g.appendChild(fill);
+    g.appendChild(ring);
+    g.appendChild(label);
+    svg.appendChild(g);
+  }
+}
 
-    document.getElementById("cnt-red").textContent   = redCount;
-    document.getElementById("cnt-blue").textContent  = blueCount;
-    document.getElementById("cnt-total").textContent = redCount + blueCount;
-    document.getElementById("last-event").textContent =
-      `last event: ${fmt(e.timestamp)} — ${e.attacker_team}.${e.attacker_computer} → ${e.target_team}.${e.target_computer}`;
+function updateTopoNodeStatus(key, status) {
+  const id = `topo-node-${key.replace('.','_')}`;
+  const g  = document.getElementById(id);
+  if (!g) return;
+  const ring = g.querySelector('circle:last-of-type');
+  if (!ring) return;
+  ring.classList.remove('node-pulse','node-atk','node-ua');
+  if      (status === 'attacking')   ring.classList.add('node-atk');
+  else if (status === 'under_attack') ring.classList.add('node-ua');
+  else                               ring.classList.add('node-pulse');
+}
+
+function animateTopoAttack(atkKey, tgtKey, color) {
+  const svg  = document.getElementById('topo-svg');
+  const aPos = topoNodePositions[atkKey];
+  const tPos = topoNodePositions[tgtKey];
+  if (!aPos || !tPos) return;
+
+  const W = svg.clientWidth || 280, H = svg.clientHeight || 300;
+  const cx = W / 2, cy = H / 2;
+
+  // Trace line attacker -> hub -> target
+  const trace1 = document.createElementNS(SVG_NS, 'line');
+  trace1.setAttribute('x1', aPos.x); trace1.setAttribute('y1', aPos.y);
+  trace1.setAttribute('x2', cx);     trace1.setAttribute('y2', cy);
+  trace1.style.stroke = color || '#00ff41';
+  trace1.style.strokeWidth = '2';
+  trace1.style.opacity = '0.85';
+  trace1.style.filter = `drop-shadow(0 0 4px ${color||'#00ff41'})`;
+
+  const trace2 = document.createElementNS(SVG_NS, 'line');
+  trace2.setAttribute('x1', cx);    trace2.setAttribute('y1', cy);
+  trace2.setAttribute('x2', tPos.x); trace2.setAttribute('y2', tPos.y);
+  trace2.style.stroke = color || '#00ff41';
+  trace2.style.strokeWidth = '2';
+  trace2.style.opacity = '0.85';
+  trace2.style.filter = `drop-shadow(0 0 4px ${color||'#00ff41'})`;
+
+  // Travelling bullet
+  const path = document.createElementNS(SVG_NS, 'path');
+  const d = `M${aPos.x},${aPos.y} L${cx},${cy} L${tPos.x},${tPos.y}`;
+  path.setAttribute('d', d);
+  path.style.fill = 'none';
+
+  const bullet = document.createElementNS(SVG_NS, 'circle');
+  bullet.setAttribute('r', '4');
+  bullet.style.fill = color || '#00ff41';
+  bullet.style.filter = `drop-shadow(0 0 6px ${color||'#00ff41'})`;
+
+  const anim = document.createElementNS(SVG_NS, 'animateMotion');
+  anim.setAttribute('dur', '0.8s');
+  anim.setAttribute('repeatCount', '1');
+  anim.setAttribute('fill', 'freeze');
+  const mpath = document.createElementNS(SVG_NS, 'mpath');
+  path.setAttribute('id', `anim-path-${Date.now()}`);
+  mpath.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', `#${path.getAttribute('id')}`);
+  anim.appendChild(mpath);
+  bullet.appendChild(anim);
+
+  svg.appendChild(path);
+  svg.appendChild(trace1);
+  svg.appendChild(trace2);
+  svg.appendChild(bullet);
+
+  anim.beginElement();
+
+  // Fade out
+  setTimeout(() => {
+    [trace1, trace2, bullet, path].forEach(el => {
+      el.style.transition = 'opacity .6s';
+      el.style.opacity = '0';
+    });
+    setTimeout(() => {
+      [trace1, trace2, bullet, path].forEach(el => el.remove());
+    }, 650);
+  }, 850);
+}
+
+/* ── node cards ───────────────────────────────────────────────────────── */
+function buildNodeGrid(nodeData) {
+  const grid = document.getElementById('nodes-grid');
+  grid.innerHTML = '';
+  for (const [key, n] of Object.entries(nodeData)) {
+    const card = document.createElement('div');
+    card.className = `node-card ${n.status || 'idle'}`;
+    card.id = `nc-${key.replace('.','_')}`;
+    card.innerHTML = nodeCardHTML(key, n);
+    grid.appendChild(card);
+  }
+}
+
+function nodeCardHTML(key, n) {
+  const status = n.status || 'idle';
+  let statusLabel = 'IDLE';
+  if      (status === 'attacking')   statusLabel = 'ATTACKING';
+  else if (status === 'under_attack') statusLabel = '!! UNDER ATTACK !!';
+
+  let attackerLine = '';
+  if (status === 'under_attack' && n.attacker)
+    attackerLine = `<div class="nc-detail">FROM: <span>${escHtml(n.attacker.toUpperCase())}</span></div>`;
+  let atypeLine = '';
+  if (n.attack_type && status !== 'idle')
+    atypeLine = `<div class="nc-detail">TYPE: <span>${escHtml(n.attack_type)}</span></div>`;
+  const lastLine = n.last_event
+    ? `<div class="nc-last">LAST: ${escHtml(fmtTime(n.last_event))}</div>`
+    : '';
+
+  return `
+    <div class="nc-header">
+      <span class="team-badge ${escHtml(n.team)}">${escHtml(n.team.toUpperCase())}</span>
+      <span class="nc-id">${escHtml(key.toUpperCase())}</span>
+    </div>
+    <div class="nc-ip">${escHtml(n.ip)}</div>
+    <div class="nc-status-row">
+      <div class="status-dot-sm ${escHtml(status)}"></div>
+      <span>${escHtml(statusLabel)}</span>
+    </div>
+    ${attackerLine}
+    ${atypeLine}
+    <div class="nc-count">ATTACKS: ${escHtml(String(n.attack_count || 0))}</div>
+    ${lastLine}
+  `;
+}
+
+function updateNodeCards(nodeData) {
+  for (const [key, n] of Object.entries(nodeData)) {
+    nodes[key] = n;
+    const id   = `nc-${key.replace('.','_')}`;
+    const card = document.getElementById(id);
+    if (card) {
+      card.className = `node-card ${n.status || 'idle'}`;
+      card.innerHTML = nodeCardHTML(key, n);
+    }
+    updateTopoNodeStatus(key, n.status || 'idle');
+  }
+}
+
+/* ── alert console ────────────────────────────────────────────────────── */
+function addAlert(ev) {
+  const feed = document.getElementById('alert-feed');
+  const sev  = ev.severity || 'low';
+  const div  = document.createElement('div');
+  div.className = `alert-entry sev-${sev}`;
+
+  const atk = `${escHtml(ev.attacker_team||'?')}.${escHtml(ev.attacker_computer||'?')}`;
+  const tgt = `${escHtml(ev.target_team||'?')}.${escHtml(ev.target_computer||'?')}`;
+  div.innerHTML = `
+    <span class="alert-ts">${escHtml(fmtTime(ev.timestamp))}</span>
+    <span class="sev-badge ${sev}">[${sev.toUpperCase()}]</span>
+    <span class="alert-body"> ${atk} ──► ${tgt} :: ${escHtml(ev.attack_label||ev.attack_type||'?')}</span>
+  `;
+
+  feed.insertBefore(div, feed.firstChild);
+  // trim
+  while (feed.children.length > 40) feed.removeChild(feed.lastChild);
+}
+
+/* ── log ──────────────────────────────────────────────────────────────── */
+function addEventToLog(ev) {
+  const feed = document.getElementById('log-feed');
+  logCount++;
+  document.getElementById('log-counter').textContent = `[${logCount}]`;
+
+  const atk   = `${ev.attacker_team||'?'}.${ev.attacker_computer||'?'}`;
+  const tgt   = `${ev.target_team||'?'}.${ev.target_computer||'?'}`;
+  const sev   = ev.severity || 'low';
+  const atype = ev.attack_label || ev.attack_type || '?';
+  const team  = ev.attacker_team || '';
+
+  let ports2 = '';
+  const ports = ev.open_ports || [];
+  if (ports.length) {
+    const phtml = ports.map(p => `<span>${escHtml(p)}</span>`).join(', ');
+    ports2 = `<div class="log-line2 log-ports">&#x21B3; ports: ${phtml}</div>`;
   }
 
-  function escHtml(str) {
-    return String(str)
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;");
+  const div = document.createElement('div');
+  div.className = 'log-entry';
+  div.innerHTML = `
+    <div class="log-line1">
+      <span class="log-ts">[${escHtml(fmtTime(ev.timestamp))}]</span>
+      <span class="log-atk ${escHtml(team)}">${escHtml(atk.toUpperCase())}</span>
+      <span class="log-arrow"> ──► </span>
+      <span class="log-tgt">${escHtml(tgt.toUpperCase())}</span>
+      <span class="log-ip">(${escHtml(ev.target_ip||'?')})</span>
+      <span class="log-type" style="color:${escHtml(ev.color||'#00ff41')}">${escHtml(atype)}</span>
+      <span class="log-sev ${sev}">[${sev.toUpperCase()}]</span>
+    </div>
+    ${ports2}
+  `;
+  feed.insertBefore(div, feed.firstChild);
+  while (feed.children.length > 80) feed.removeChild(feed.lastChild);
+
+  // update counters
+  if (team === 'red')  { redCount++;  document.getElementById('cnt-red').textContent  = redCount; }
+  if (team === 'blue') { blueCount++; document.getElementById('cnt-blue').textContent = blueCount; }
+  document.getElementById('cnt-total').textContent = redCount + blueCount;
+}
+
+/* ── warning overlay ──────────────────────────────────────────────────── */
+function showWarning(ev) {
+  const ov   = document.getElementById('warn-overlay');
+  const body = document.getElementById('warn-body');
+  const atk  = `${ev.attacker_team||'?'}.${ev.attacker_computer||'?'}`;
+  const tgt  = `${ev.target_team||'?'}.${ev.target_computer||'?'}`;
+  body.innerHTML = `
+    ATTACKER: <strong>${escHtml(atk.toUpperCase())}</strong><br>
+    TARGET:   <strong>${escHtml(tgt.toUpperCase())}</strong><br>
+    IP:       ${escHtml(ev.target_ip||'?')}<br>
+    TYPE:     ${escHtml(ev.attack_label||ev.attack_type||'?')}<br>
+    SEVERITY: ${escHtml((ev.severity||'?').toUpperCase())}
+  `;
+  ov.classList.add('active');
+
+  let countdown = 4;
+  const timerEl = document.getElementById('warn-timer');
+  if (_warnTimer) clearInterval(_warnTimer);
+  _warnTimer = setInterval(() => {
+    countdown--;
+    if (timerEl) timerEl.textContent = countdown;
+    if (countdown <= 0) dismissWarning();
+  }, 1000);
+}
+
+function dismissWarning() {
+  document.getElementById('warn-overlay').classList.remove('active');
+  if (_warnTimer) { clearInterval(_warnTimer); _warnTimer = null; }
+}
+
+/* ── command form ─────────────────────────────────────────────────────── */
+function populateCommandForm(nodeData, atkTypeData) {
+  const fromSel  = document.getElementById('cmd-from');
+  const toSel    = document.getElementById('cmd-to');
+  const atypeSel = document.getElementById('cmd-atype');
+
+  fromSel.innerHTML = '';
+  toSel.innerHTML   = '';
+  for (const [key] of Object.entries(nodeData)) {
+    fromSel.innerHTML += `<option value="${escHtml(key)}">${escHtml(key.toUpperCase())}</option>`;
+    toSel.innerHTML   += `<option value="${escHtml(key)}">${escHtml(key.toUpperCase())}</option>`;
   }
 
-  // Load existing history on page open
-  fetch("/history")
+  atypeSel.innerHTML = '';
+  for (const [key, at] of Object.entries(atkTypeData)) {
+    atypeSel.innerHTML += `<option value="${escHtml(key)}">${escHtml(at.label)} [${escHtml(at.severity)}]</option>`;
+  }
+}
+
+function executeCommand() {
+  const fromVal  = document.getElementById('cmd-from').value;
+  const toVal    = document.getElementById('cmd-to').value;
+  const atypeVal = document.getElementById('cmd-atype').value;
+  const fb       = document.getElementById('cmd-feedback');
+
+  if (!fromVal || !toVal || fromVal === toVal) {
+    fb.textContent = 'ERR: SELECT DIFFERENT FROM/TO NODES';
+    return;
+  }
+
+  const [atkTeam, atkComp] = fromVal.split('.');
+  const [tgtTeam, tgtComp] = toVal.split('.');
+
+  fb.textContent = 'SENDING...';
+  fetch('/api/command', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      attacker_team: atkTeam,
+      attacker_computer: atkComp,
+      target_team: tgtTeam,
+      target_computer: tgtComp,
+      attack_type: atypeVal,
+    }),
+  })
     .then(r => r.json())
-    .then(events => events.forEach(renderEvent))
+    .then(() => {
+      fb.textContent = 'COMMAND SENT';
+      setTimeout(() => { fb.textContent = ''; }, 2000);
+    })
+    .catch(() => { fb.textContent = 'ERR: SEND FAILED'; });
+}
+
+/* ── simulation button ────────────────────────────────────────────────── */
+let simRunning = false;
+function updateSimBtn(running) {
+  simRunning = running;
+  const btn = document.getElementById('btn-simulate');
+  if (running) {
+    btn.textContent = '[ \u25A0 STOP SIMULATION ]';
+    btn.classList.add('running');
+  } else {
+    btn.textContent = '[ \u25BA START SIMULATION ]';
+    btn.classList.remove('running');
+  }
+}
+
+function toggleSim() {
+  fetch('/api/simulate', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({action: 'toggle'}),
+  })
+    .then(r => r.json())
+    .then(d => updateSimBtn(d.running))
     .catch(() => {});
+}
 
-  // SSE live stream
-  function connect() {
-    const dot    = document.getElementById("dot");
-    const status = document.getElementById("conn-status");
-    const es     = new EventSource("/stream");
+/* ── SSE connection ───────────────────────────────────────────────────── */
+function handleSSEMessage(msg) {
+  const type = msg.type;
 
-    es.onopen = () => {
-      dot.style.background = "var(--green)";
-      status.textContent   = "LIVE";
-    };
-
-    es.onmessage = (ev) => {
-      const data = JSON.parse(ev.data);
-      if (!data.ping) renderEvent(data);
-    };
-
-    es.onerror = () => {
-      dot.style.background = "var(--red)";
-      status.textContent   = "RECONNECTING...";
-      es.close();
-      setTimeout(connect, 3000);
-    };
+  if (type === 'init') {
+    nodes    = msg.nodes    || {};
+    atkTypes = msg.attack_types || {};
+    if (!_builtUI) {
+      buildTopology(nodes);
+      buildNodeGrid(nodes);
+      populateCommandForm(nodes, atkTypes);
+      _builtUI = true;
+    }
+    return;
   }
 
+  if (type === 'nodes') {
+    updateNodeCards(msg.data || {});
+    return;
+  }
+
+  if (type === 'event') {
+    const ev = msg.data;
+    if (!ev) return;
+    addEventToLog(ev);
+    addAlert(ev);
+    updateNodeCards(nodes); // will be refreshed by 'nodes' message too
+
+    const atkKey = `${ev.attacker_team}.${ev.attacker_computer}`;
+    const tgtKey = `${ev.target_team}.${ev.target_computer}`;
+    animateTopoAttack(atkKey, tgtKey, ev.color);
+
+    if (window._oscSpike) window._oscSpike(
+      ev.severity === 'critical' ? 0.95 :
+      ev.severity === 'high'     ? 0.75 :
+      ev.severity === 'medium'   ? 0.55 : 0.35
+    );
+
+    const sev = ev.severity || 'low';
+    if (sev === 'critical' || sev === 'high') showWarning(ev);
+    return;
+  }
+
+  if (type === 'ping') return;
+}
+
+function connect() {
+  const dot    = document.getElementById('conn-dot');
+  const status = document.getElementById('conn-status');
+  const es     = new EventSource('/stream');
+
+  es.onopen = () => {
+    dot.style.background  = '#00ff41';
+    dot.style.boxShadow   = '0 0 8px #00ff41';
+    status.textContent    = 'LIVE';
+  };
+
+  es.onmessage = (ev) => {
+    try {
+      const msg = JSON.parse(ev.data);
+      handleSSEMessage(msg);
+    } catch (e) { /* ignore parse errors */ }
+  };
+
+  es.onerror = () => {
+    dot.style.background = '#ff4444';
+    dot.style.boxShadow  = '0 0 8px #ff4444';
+    status.textContent   = 'RECONNECTING...';
+    es.close();
+    setTimeout(connect, 3000);
+  };
+}
+
+/* ── init ─────────────────────────────────────────────────────────────── */
+(async function init() {
+  // Fire parallel requests
+  const [nodesRes, atkRes, histRes, simRes] = await Promise.allSettled([
+    fetch('/api/nodes').then(r => r.json()),
+    fetch('/api/attack-types').then(r => r.json()),
+    fetch('/api/history').then(r => r.json()),
+    fetch('/api/simulate/status').then(r => r.json()),
+  ]);
+
+  if (nodesRes.status === 'fulfilled') nodes    = nodesRes.value;
+  if (atkRes.status  === 'fulfilled') atkTypes = atkRes.value;
+
+  // Build UI from REST data (SSE init will update it too)
+  buildTopology(nodes);
+  buildNodeGrid(nodes);
+  populateCommandForm(nodes, atkTypes);
+  _builtUI = true;
+
+  // Load history
+  if (histRes.status === 'fulfilled' && Array.isArray(histRes.value)) {
+    // Oldest first so prepend works correctly
+    [...histRes.value].reverse().forEach(ev => {
+      addEventToLog(ev);
+      addAlert(ev);
+    });
+  }
+
+  if (simRes.status === 'fulfilled') updateSimBtn(simRes.value.running);
+
+  // Connect SSE
   connect();
+})();
 </script>
 </body>
 </html>
