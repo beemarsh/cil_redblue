@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>REDBLUE — OPERATOR CONSOLE</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+/* ── CSS variables ── default (green) ──────────────────────────────────── */
+:root {
+  --primary:  #00ff41;
+  --bg:       #000;
+  --bg2:      #010a01;
+  --dim:      #003a0f;
+  --dim2:     #005c1a;
+  --warn:     #ff3333;
+  --warn2:    #ff000033;
+  --glow:     0 0 8px #00ff41, 0 0 22px #00ff4144;
+  --border:   1px solid #00ff41;
+  --font:     'VT323', monospace;
+  --mono:     'Share Tech Mono', monospace;
+}
+body.team-blue {
+  --primary:  #00ccff;
+  --bg:       #000508;
+  --bg2:      #010a14;
+  --dim:      #00304d;
+  --dim2:     #00507a;
+  --glow:     0 0 8px #00ccff, 0 0 22px #00ccff44;
+  --border:   1px solid #00ccff;
+}
+body.team-red {
+  --primary:  #ff5500;
+  --bg:       #080200;
+  --bg2:      #0d0300;
+  --dim:      #3a1200;
+  --dim2:     #5c1e00;
+  --glow:     0 0 8px #ff5500, 0 0 22px #ff550044;
+  --border:   1px solid #ff5500;
+}
+
+/* ── reset & base ──────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+button { appearance: none; }
+
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--primary);
+  font-family: var(--font);
+  font-size: 20px;
+}
+
+/* CRT scanlines */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background: repeating-linear-gradient(
+    0deg, transparent, transparent 2px,
+    rgba(0,0,0,0.07) 2px, rgba(0,0,0,0.07) 4px);
+  pointer-events: none;
+  z-index: 9999;
+}
+/* Vignette */
+body::after {
+  content: '';
+  position: fixed; inset: 0;
+  background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.65) 100%);
+  pointer-events: none;
+  z-index: 9998;
+}
+
+/* Under-attack body state */
+body.under-attack { animation: body-atk 0.45s ease-in-out infinite alternate; }
+@keyframes body-atk {
+  from { box-shadow: inset 0 0 0px transparent; }
+  to   { box-shadow: inset 0 0 80px var(--warn); }
+}
+
+/* ── layout shell ──────────────────────────────────────────────────────── */
+#shell {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* ── header ─────────────────────────────────────────────────────────────── */
+#hdr {
+  display: flex; align-items: center; gap: 18px;
+  padding: 6px 20px;
+  border-bottom: var(--border);
+  background: var(--bg2);
+  box-shadow: var(--glow);
+  flex-shrink: 0;
+  position: relative;
+  z-index: 200;
+  min-height: 58px;
+}
+#hdr .logo {
+  font-size: 38px; letter-spacing: 5px;
+  text-shadow: var(--glow);
+  animation: glitch-logo 4s infinite;
+}
+@keyframes glitch-logo {
+  0%,94%,100% { text-shadow: var(--glow); letter-spacing: 5px; }
+  95% { text-shadow: -3px 0 #ff004488, 3px 0 #00ccff88, var(--glow); letter-spacing: 6px; }
+  96% { text-shadow: var(--glow); }
+  97% { text-shadow: 4px 0 #ff004466, -2px 0 #00ccff66; }
+  98% { text-shadow: var(--glow); }
+}
+#hdr .node-id { font-size: 26px; letter-spacing: 3px; opacity: 0.85; }
+#hdr .spacer  { flex: 1; }
+
+/* blinking under-attack banner in header */
+#hdr-alert {
+  position: absolute; left: 50%; transform: translateX(-50%);
+  font-size: 30px; letter-spacing: 5px;
+  color: var(--warn); text-shadow: 0 0 18px var(--warn);
+  display: none;
+  animation: blink-warn 0.5s step-end infinite;
+}
+#hdr-alert.on { display: block; }
+@keyframes blink-warn { 50% { opacity: 0; } }
+
+#hdr .hdr-right { display: flex; align-items: center; gap: 16px; font-size: 18px; }
+.dot { width: 9px; height: 9px; border-radius: 50%; background: #333; display: inline-block; }
+
+/* ── under-attack overlay banner ─────────────────────────────────────────── */
+#atk-banner {
+  position: fixed; top: 58px; left: 0; right: 0;
+  z-index: 8000; pointer-events: none;
+  display: none;
+}
+#atk-banner.on { display: block; }
+#atk-banner-inner {
+  margin: 8px 16px 0;
+  border: 2px solid var(--warn);
+  background: rgba(40,0,0,0.88);
+  padding: 10px 18px;
+  display: flex; align-items: center; gap: 14px;
+  box-shadow: 0 0 40px var(--warn);
+  animation: banner-in 0.2s ease-out;
+}
+@keyframes banner-in {
+  from { transform: translateY(-12px); opacity: 0; }
+  to   { transform: translateY(0);     opacity: 1; }
+}
+#atk-banner-icon { font-size: 32px; color: var(--warn); animation: blink-warn 0.5s step-end infinite; }
+#atk-banner-title { font-size: 28px; letter-spacing: 4px; color: var(--warn); text-shadow: 0 0 14px var(--warn); }
+#atk-banner-detail { font-size: 16px; font-family: var(--mono); color: var(--warn); opacity: 0.85; margin-top: 2px; }
+
+/* ── content area ────────────────────────────────────────────────────────── */
+#content {
+  display: grid;
+  grid-template-columns: 300px 1fr 280px;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ── panel base ──────────────────────────────────────────────────────────── */
+.panel {
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 10px 12px;
+  overflow: hidden;
+  border-right: var(--border);
+}
+.panel:last-child { border-right: none; }
+.panel-title {
+  font-size: 20px; letter-spacing: 4px;
+  border-bottom: var(--border);
+  padding-bottom: 5px;
+  text-shadow: var(--glow);
+  flex-shrink: 0;
+}
+.sec-lbl {
+  font-size: 14px; letter-spacing: 3px;
+  opacity: 0.5; flex-shrink: 0;
+  margin-top: 4px;
+}
+
+/* ── LEFT — attack console ───────────────────────────────────────────────── */
+#atk-type-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 5px; flex-shrink: 0;
+}
+.atype-btn {
+  background: var(--bg2);
+  border: 1px solid var(--dim);
+  border-left-width: 3px;
+  color: var(--primary);
+  font-family: var(--font); font-size: 15px;
+  padding: 6px 5px; cursor: pointer;
+  text-align: center; line-height: 1.2;
+  transition: all 0.15s;
+  letter-spacing: 1px;
+}
+.atype-btn:hover { background: var(--dim); border-color: var(--primary); box-shadow: var(--glow); }
+.atype-btn.sel   { background: var(--dim2); border-color: var(--primary); box-shadow: var(--glow); color: #fff; }
+.atype-btn .sev  { font-size: 11px; opacity: 0.55; display: block; margin-top: 1px; }
+
+#target-list { display: flex; flex-direction: column; gap: 5px; flex-shrink: 0; }
+.tgt-btn {
+  background: var(--bg2);
+  border: 1px solid var(--dim);
+  color: var(--primary);
+  font-family: var(--font); font-size: 19px;
+  padding: 8px 10px; cursor: pointer;
+  display: flex; justify-content: space-between; align-items: center;
+  transition: all 0.15s; letter-spacing: 1px;
+}
+.tgt-btn:hover { background: var(--dim); border-color: var(--primary); box-shadow: var(--glow); }
+.tgt-btn.sel   { background: var(--dim2); border-color: var(--primary); box-shadow: var(--glow); }
+.tgt-btn .tip  { font-size: 13px; font-family: var(--mono); opacity: 0.5; }
+
+#fire-area  { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; margin-top: auto; }
+#fire-prog  { height: 3px; background: var(--dim); overflow: hidden; }
+#fire-bar   { height: 100%; width: 0; background: var(--primary); box-shadow: var(--glow); transition: width 0.3s; }
+#fire-bar.run { animation: bar-run 1.8s ease-in-out infinite; }
+@keyframes bar-run {
+  0%   { width: 8%;  margin-left: 0; }
+  50%  { width: 45%; margin-left: 28%; }
+  100% { width: 8%;  margin-left: 92%; }
+}
+#fire-status { font-size: 15px; text-align: center; opacity: 0.6; }
+#fire-btn {
+  background: var(--dim); border: 2px solid var(--primary);
+  color: var(--primary); font-family: var(--font);
+  font-size: 32px; letter-spacing: 9px; padding: 11px;
+  cursor: pointer; width: 100%;
+  text-shadow: var(--glow); box-shadow: var(--glow);
+  transition: all 0.2s;
+}
+#fire-btn:hover:not(:disabled) { background: var(--dim2); transform: scale(1.02); box-shadow: var(--glow), 0 0 40px var(--primary); }
+#fire-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+#fire-btn.idle-pulse { animation: fire-idle 2.5s ease-in-out infinite; }
+@keyframes fire-idle {
+  0%,100% { box-shadow: var(--glow); }
+  50%      { box-shadow: var(--glow), 0 0 35px var(--primary); }
+}
+#fire-btn.run-flash { animation: fire-run 0.3s ease-in-out infinite alternate; border-color: var(--warn); color: var(--warn); }
+@keyframes fire-run { from { opacity: 0.55; } to { opacity: 1; } }
+
+/* ── CENTER — radar + terminal ───────────────────────────────────────────── */
+#viz {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: flex-start;
+  gap: 10px; padding: 10px;
+  border-right: none;
+  overflow: hidden;
+}
+#radar-wrap {
+  position: relative; flex-shrink: 0;
+}
+#radar {
+  display: block;
+  border: var(--border);
+  box-shadow: var(--glow);
+}
+#terminal {
+  flex: 1; width: 100%; min-height: 0;
+  background: var(--bg2); border: var(--border);
+  padding: 8px 12px; overflow-y: auto;
+  font-family: var(--mono); font-size: 13px;
+  color: var(--primary);
+}
+.tline { line-height: 1.55; white-space: pre-wrap; }
+.tline.ok   { color: #00ff41; }
+.tline.warn { color: #f9e2af; }
+.tline.err  { color: var(--warn); }
+.tline.info { color: var(--primary); opacity: 0.65; }
+.tline.dim  { color: var(--primary); opacity: 0.4; }
+
+/* ── RIGHT — system status ───────────────────────────────────────────────── */
+#status-panel { border-right: none; }
+
+#my-node-box {
+  background: var(--bg2); border: 2px solid var(--primary);
+  padding: 10px 12px; text-align: center; flex-shrink: 0;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+#my-node-box.atk { border-color: var(--warn); animation: node-pulse 0.5s ease-in-out infinite alternate; }
+@keyframes node-pulse { from { box-shadow: none; } to { box-shadow: 0 0 30px var(--warn); } }
+#my-node-box .nl { font-size: 14px; letter-spacing: 3px; opacity: 0.55; }
+#my-node-box .nv { font-size: 30px; text-shadow: var(--glow); margin-top: 3px; }
+
+.stats-row  { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; flex-shrink: 0; }
+.stat-box   { background: var(--bg2); border: var(--border); padding: 8px 10px; }
+.stat-box .sl { font-size: 13px; letter-spacing: 3px; opacity: 0.5; }
+.stat-box .sv { font-size: 36px; text-shadow: var(--glow); }
+
+#enemy-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 5px; min-height: 0; }
+.enode {
+  background: var(--bg2); border: 1px solid var(--dim);
+  padding: 8px 10px; transition: all 0.25s;
+}
+.enode .ei  { font-size: 18px; letter-spacing: 2px; }
+.enode .eip { font-size: 13px; font-family: var(--mono); opacity: 0.45; }
+.enode .est { font-size: 14px; letter-spacing: 2px; margin-top: 2px; }
+.enode.targeted { border-color: var(--warn); box-shadow: 0 0 14px var(--warn)44; }
+.enode.online   { border-color: var(--primary); }
+
+#pi-indicator {
+  background: var(--bg2); border: var(--border);
+  padding: 6px 10px; font-size: 15px; letter-spacing: 2px;
+  text-align: center; flex-shrink: 0;
+  opacity: 0.7;
+}
+#pi-indicator.ok  { color: var(--primary); }
+#pi-indicator.off { color: var(--warn); border-color: var(--warn); }
+
+/* ── LOG SECTION ──────────────────────────────────────────────────────────── */
+#log-section {
+  height: 185px; border-top: var(--border);
+  background: var(--bg2);
+  display: flex; flex-direction: column; flex-shrink: 0;
+}
+#log-hdr {
+  padding: 3px 14px; border-bottom: var(--border);
+  font-size: 15px; letter-spacing: 4px;
+  display: flex; justify-content: space-between; align-items: center;
+  flex-shrink: 0;
+}
+#log-feed {
+  flex: 1; overflow-y: auto; padding: 3px 12px;
+  font-family: var(--mono); font-size: 13px;
+  display: flex; flex-direction: column-reverse;
+}
+.lentry {
+  padding: 2px 0; border-bottom: 1px solid var(--dim);
+  display: grid; grid-template-columns: 65px 90px 1fr;
+  gap: 8px; line-height: 1.45;
+}
+.lentry.out { color: var(--primary); }
+.lentry.inc { color: var(--warn); }
+.lentry.oth { opacity: 0.45; }
+.lentry .ts  { opacity: 0.5; }
+
+/* scrollbar */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--dim2); border-radius: 3px; }
+  </style>
+</head>
+<body>
+<div id="shell">
+
+  <!-- header -->
+  <div id="hdr">
+    <div class="logo">REDBLUE</div>
+    <div class="node-id" id="node-label">TEAM_? :: NODE_?</div>
+    <div id="hdr-alert">⚠ INCOMING ATTACK ⚠</div>
+    <div class="spacer"></div>
+    <div class="hdr-right">
+      <span class="dot" id="conn-dot"></span>
+      <span id="conn-txt">CONNECTING</span>
+      <span style="opacity:.35">|</span>
+      <span id="pi-txt">PI: --</span>
+      <span style="opacity:.35">|</span>
+      <span id="clock"></span>
+    </div>
+  </div>
+
+  <!-- under-attack overlay -->
+  <div id="atk-banner">
+    <div id="atk-banner-inner">
+      <div id="atk-banner-icon">⚠</div>
+      <div>
+        <div id="atk-banner-title">SYSTEM UNDER ATTACK</div>
+        <div id="atk-banner-detail">---</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3-column content -->
+  <div id="content">
+
+    <!-- LEFT: attack console -->
+    <div class="panel" id="left-panel">
+      <div class="panel-title">ATTACK CONSOLE</div>
+
+      <div class="sec-lbl">SELECT ATTACK TYPE</div>
+      <div id="atk-type-grid"></div>
+
+      <div class="sec-lbl">SELECT TARGET</div>
+      <div id="target-list"></div>
+
+      <div id="fire-area">
+        <div id="fire-prog"><div id="fire-bar"></div></div>
+        <div id="fire-status">READY</div>
+        <button id="fire-btn" class="idle-pulse" disabled onclick="launchAttack()">EXECUTE</button>
+      </div>
+    </div>
+
+    <!-- CENTER: radar + terminal -->
+    <div id="viz" class="panel">
+      <div id="radar-wrap">
+        <canvas id="radar"></canvas>
+      </div>
+      <div id="terminal">
+        <div class="tline info">// OPERATOR CONSOLE INITIALIZING...</div>
+      </div>
+    </div>
+
+    <!-- RIGHT: system status -->
+    <div class="panel" id="status-panel">
+      <div class="panel-title">SYSTEM STATUS</div>
+
+      <div id="my-node-box">
+        <div class="nl">THIS NODE</div>
+        <div class="nv" id="my-status">IDLE</div>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-box">
+          <div class="sl">LAUNCHED</div>
+          <div class="sv" id="stat-atk">0</div>
+        </div>
+        <div class="stat-box">
+          <div class="sl">RECEIVED</div>
+          <div class="sv" id="stat-rcv" style="color:var(--warn)">0</div>
+        </div>
+      </div>
+
+      <div class="sec-lbl">ENEMY NODES</div>
+      <div id="enemy-list"></div>
+
+      <div id="pi-indicator">PI: CONNECTING...</div>
+    </div>
+  </div>
+
+  <!-- log section -->
+  <div id="log-section">
+    <div id="log-hdr">
+      <span>EVENT LOG</span>
+      <span id="log-cnt" style="opacity:.45;font-size:13px;">0 EVENTS</span>
+    </div>
+    <div id="log-feed"></div>
+  </div>
+
+</div><!-- #shell -->
+
+<script>
+'use strict';
+
+/* ── state ─────────────────────────────────────────────────────────────── */
+let myTeam = '', myComp = '', enemyTeam = '';
+let attackTypes = {}, targets = {};
+let selType = '', selTarget = '';
+let isAttacking = false;
+let atkLaunched = 0, atkReceived = 0, logCount = 0;
+let underAttackTimer = null;
+let currentAttackId  = null;
+
+/* ── clock ─────────────────────────────────────────────────────────────── */
+(function tickClock() {
+  const el = document.getElementById('clock');
+  function tick() {
+    const d = new Date();
+    el.textContent = [d.getHours(), d.getMinutes(), d.getSeconds()]
+      .map(n => String(n).padStart(2,'0')).join(':');
+  }
+  tick(); setInterval(tick, 1000);
+})();
+
+/* ── radar canvas ───────────────────────────────────────────────────────── */
+const canvas = document.getElementById('radar');
+const ctx    = canvas.getContext('2d');
+
+let RW = 0, RH = 0, RCX = 0, RCY = 0, RMAX = 0;
+let sweepAngle  = -Math.PI / 2;     // start pointing up
+let scanRings   = [];               // [{x,y,r,maxR,color}]
+let attackBeam  = null;             // {tx,ty,prog,color}
+let nodeBlips   = {};               // key -> {x,y,label}
+
+function sizeRadar() {
+  const wrap = document.getElementById('viz');
+  const term = document.getElementById('terminal');
+  // give radar 55% of viz height, leave rest for terminal
+  RH  = Math.floor(wrap.clientHeight * 0.54);
+  RW  = Math.min(wrap.clientWidth - 20, RH * 1.25);
+  RH  = Math.max(220, RH);
+  RW  = Math.max(280, RW);
+  canvas.width  = RW;
+  canvas.height = RH;
+  RCX = RW / 2; RCY = RH / 2;
+  RMAX = Math.min(RCX, RCY) * 0.88;
+  placeBlips();
+}
+
+function placeBlips() {
+  nodeBlips = {};
+  const keys = Object.keys(targets);
+  keys.forEach((key, i) => {
+    const angle = ((360 / keys.length) * i + 40) * Math.PI / 180 - Math.PI / 2;
+    const r     = RMAX * 0.70;
+    nodeBlips[key] = {
+      x:     RCX + r * Math.cos(angle),
+      y:     RCY + r * Math.sin(angle),
+      label: `${enemyTeam.toUpperCase()}.${key.toUpperCase()}`,
+    };
+  });
+}
+
+function teamColor() {
+  return getComputedStyle(document.body).getPropertyValue('--primary').trim() || '#00ff41';
+}
+
+function drawRadar() {
+  const tc = teamColor();
+
+  ctx.clearRect(0, 0, RW, RH);
+
+  // bg
+  ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--bg').trim() || '#000';
+  ctx.fillRect(0, 0, RW, RH);
+
+  // range rings
+  for (let i = 1; i <= 4; i++) {
+    ctx.beginPath();
+    ctx.arc(RCX, RCY, RMAX * i / 4, 0, Math.PI * 2);
+    ctx.strokeStyle = tc + '28'; ctx.lineWidth = 1; ctx.stroke();
+  }
+  // crosshair
+  ctx.strokeStyle = tc + '22'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(RCX, RCY - RMAX); ctx.lineTo(RCX, RCY + RMAX); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(RCX - RMAX, RCY); ctx.lineTo(RCX + RMAX, RCY); ctx.stroke();
+
+  // NSEW labels
+  ctx.font = `14px VT323, monospace`;
+  ctx.fillStyle = tc + '55'; ctx.textAlign = 'center';
+  ctx.fillText('N', RCX, RCY - RMAX - 4);
+  ctx.fillText('S', RCX, RCY + RMAX + 14);
+  ctx.textAlign = 'left';
+  ctx.fillText('E', RCX + RMAX + 4, RCY + 5);
+  ctx.textAlign = 'right';
+  ctx.fillText('W', RCX - RMAX - 4, RCY + 5);
+
+  // sweep trail
+  ctx.save();
+  ctx.translate(RCX, RCY);
+  const trailLen = Math.PI / 3;
+  const grad = ctx.createConicalGradient
+    ? null : null;   // fallback: filled wedge
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.arc(0, 0, RMAX, sweepAngle - trailLen, sweepAngle);
+  ctx.closePath();
+  ctx.fillStyle = tc + '18'; ctx.fill();
+  // sweep line
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.lineTo(Math.cos(sweepAngle) * RMAX, Math.sin(sweepAngle) * RMAX);
+  ctx.strokeStyle = tc + 'cc'; ctx.lineWidth = 2;
+  ctx.shadowColor = tc; ctx.shadowBlur = 10;
+  ctx.stroke(); ctx.shadowBlur = 0;
+  ctx.restore();
+
+  sweepAngle += 0.022;
+
+  // my node at center
+  ctx.beginPath();
+  ctx.arc(RCX, RCY, 7, 0, Math.PI * 2);
+  ctx.fillStyle   = tc;
+  ctx.shadowColor = tc; ctx.shadowBlur = 14;
+  ctx.fill();        ctx.shadowBlur = 0;
+  ctx.font = '14px VT323, monospace';
+  ctx.fillStyle = tc; ctx.textAlign = 'center';
+  ctx.fillText(`${myTeam.toUpperCase()}.${myComp.toUpperCase()}`, RCX, RCY + 22);
+
+  // enemy blips
+  for (const [key, b] of Object.entries(nodeBlips)) {
+    const isSel = key === selTarget;
+    ctx.save();
+    if (isSel) {
+      // targeting reticle
+      const rs = 14;
+      ctx.strokeStyle = '#ff3333'; ctx.lineWidth = 1.5;
+      ctx.shadowColor = '#ff3333'; ctx.shadowBlur = 10;
+      [[-1,0],[1,0],[0,-1],[0,1]].forEach(([dx,dy]) => {
+        ctx.beginPath();
+        ctx.moveTo(b.x + dx * rs, b.y + dy * rs);
+        ctx.lineTo(b.x + dx * rs * 0.4, b.y + dy * rs * 0.4);
+        ctx.stroke();
+      });
+      ctx.beginPath(); ctx.arc(b.x, b.y, 9, 0, Math.PI * 2);
+      ctx.strokeStyle = '#ff3333'; ctx.stroke();
+      ctx.shadowBlur  = 0;
+      ctx.beginPath(); ctx.arc(b.x, b.y, 4, 0, Math.PI * 2);
+      ctx.fillStyle   = '#ff3333'; ctx.fill();
+      ctx.fillStyle   = '#ff3333';
+    } else {
+      ctx.beginPath(); ctx.arc(b.x, b.y, 4, 0, Math.PI * 2);
+      ctx.fillStyle   = tc + 'aa'; ctx.fill();
+      ctx.fillStyle   = tc;
+    }
+    ctx.font = '14px VT323, monospace'; ctx.textAlign = 'center';
+    ctx.fillText(b.label, b.x, b.y - 14);
+    ctx.restore();
+  }
+
+  // attack beam
+  if (attackBeam) {
+    const {tx, ty, prog, color} = attackBeam;
+    const ex = RCX + (tx - RCX) * prog;
+    const ey = RCY + (ty - RCY) * prog;
+    ctx.beginPath();
+    ctx.moveTo(RCX, RCY); ctx.lineTo(ex, ey);
+    ctx.strokeStyle = color; ctx.lineWidth = 2.5;
+    ctx.shadowColor = color; ctx.shadowBlur  = 16;
+    ctx.stroke();
+    ctx.beginPath(); ctx.arc(ex, ey, 5, 0, Math.PI * 2);
+    ctx.fillStyle   = '#fff';
+    ctx.shadowColor = color; ctx.shadowBlur = 20;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    attackBeam.prog = Math.min(1.0, prog + 0.028);
+    if (attackBeam.prog >= 1.0 && !attackBeam.done) {
+      attackBeam.done = true;
+      addScanRings(tx, ty, color);
+    }
+  }
+
+  // scan rings
+  scanRings = scanRings.filter(r => r.r < r.maxR);
+  for (const ring of scanRings) {
+    const alpha = Math.max(0, 1 - ring.r / ring.maxR);
+    ctx.beginPath(); ctx.arc(ring.x, ring.y, ring.r, 0, Math.PI * 2);
+    const hex = Math.round(alpha * 220).toString(16).padStart(2,'0');
+    ctx.strokeStyle = ring.color + hex;
+    ctx.lineWidth   = 1.5; ctx.stroke();
+    ring.r += 1.8;
+  }
+
+  requestAnimationFrame(drawRadar);
+}
+
+function addScanRings(x, y, color, count = 3) {
+  for (let i = 0; i < count; i++) {
+    scanRings.push({x, y, r: i * 10, maxR: RMAX * 0.38, color});
+  }
+}
+
+/* ── build UI from config ───────────────────────────────────────────────── */
+function buildAttackTypeGrid() {
+  const SEV_COLORS = {critical:'#ff3333', high:'#ff6600', medium:'#f9e2af', low:'#00ff41'};
+  const grid = document.getElementById('atk-type-grid');
+  grid.innerHTML = '';
+  for (const [k, v] of Object.entries(attackTypes)) {
+    const btn = document.createElement('button');
+    btn.className    = 'atype-btn';
+    btn.dataset.key  = k;
+    btn.style.borderLeftColor = v.color || SEV_COLORS[v.severity] || '#00ff41';
+    btn.innerHTML    = `${v.label}<span class="sev">[${v.severity.toUpperCase()}]</span>`;
+    btn.onclick      = () => pickType(k);
+    grid.appendChild(btn);
+  }
+}
+
+function buildTargetList() {
+  const list  = document.getElementById('target-list');
+  const elist = document.getElementById('enemy-list');
+  list.innerHTML  = '';
+  elist.innerHTML = '';
+  for (const [comp, ip] of Object.entries(targets)) {
+    // attack panel button
+    const btn = document.createElement('button');
+    btn.className   = 'tgt-btn';
+    btn.dataset.key = comp;
+    btn.innerHTML   = `<span>${enemyTeam.toUpperCase()}.${comp.toUpperCase()}</span><span class="tip">${ip}</span>`;
+    btn.onclick     = () => pickTarget(comp);
+    list.appendChild(btn);
+    // enemy node in status panel
+    const en = document.createElement('div');
+    en.className = 'enode';
+    en.id        = `en-${comp}`;
+    en.innerHTML = `
+      <div class="ei">${enemyTeam.toUpperCase()}.${comp.toUpperCase()}</div>
+      <div class="eip">${ip}</div>
+      <div class="est" id="est-${comp}">UNKNOWN</div>`;
+    elist.appendChild(en);
+  }
+}
+
+function pickType(k) {
+  selType = k;
+  document.querySelectorAll('.atype-btn').forEach(b => b.classList.toggle('sel', b.dataset.key === k));
+  updateFireBtn();
+  const info = attackTypes[k] || {};
+  tprint(`// ATTACK SELECTED: ${(info.label||k).toUpperCase()} [${(info.severity||'?').toUpperCase()}]`, 'info');
+}
+
+function pickTarget(comp) {
+  selTarget = comp;
+  document.querySelectorAll('.tgt-btn').forEach(b => b.classList.toggle('sel', b.dataset.key === comp));
+  document.querySelectorAll('.enode').forEach(n => n.classList.toggle('targeted', n.id === `en-${comp}`));
+  updateFireBtn();
+  tprint(`// TARGET LOCKED: ${enemyTeam.toUpperCase()}.${comp.toUpperCase()} (${targets[comp]})`, 'info');
+}
+
+function updateFireBtn() {
+  const btn = document.getElementById('fire-btn');
+  const ok  = selType && selTarget && !isAttacking;
+  btn.disabled = !ok;
+  if (!isAttacking) {
+    btn.classList.toggle('idle-pulse', ok);
+    btn.classList.remove('run-flash');
+    btn.textContent = 'EXECUTE';
+  }
+}
+
+/* ── terminal output ────────────────────────────────────────────────────── */
+function tprint(line, cls = '') {
+  const el  = document.getElementById('terminal');
+  const div = document.createElement('div');
+  div.className   = `tline ${cls}`;
+  div.textContent = line;
+  el.appendChild(div);
+  el.scrollTop = el.scrollHeight;
+  while (el.children.length > 120) el.removeChild(el.firstChild);
+}
+
+/* ── launch attack ──────────────────────────────────────────────────────── */
+function launchAttack() {
+  if (!selType || !selTarget || isAttacking) return;
+  isAttacking = true;
+
+  const info = attackTypes[selType] || {};
+  const ip   = targets[selTarget];
+  const btn  = document.getElementById('fire-btn');
+
+  btn.classList.remove('idle-pulse');
+  btn.classList.add('run-flash');
+  btn.textContent = 'RUNNING...';
+  document.getElementById('fire-status').textContent = `ATTACKING ${enemyTeam.toUpperCase()}.${selTarget.toUpperCase()}...`;
+  document.getElementById('fire-bar').classList.add('run');
+
+  tprint('', '');
+  tprint(`> EXECUTE: ${(info.label||selType).toUpperCase()} → ${enemyTeam.toUpperCase()}.${selTarget.toUpperCase()} (${ip})`, 'ok');
+  tprint(`> SEVERITY: ${(info.severity||'?').toUpperCase()}`, 'warn');
+
+  // start beam animation immediately
+  const b = nodeBlips[selTarget];
+  if (b) attackBeam = {tx: b.x, ty: b.y, prog: 0, color: info.color || '#00ff41', done: false};
+
+  fetch('/api/attack', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({attack_type: selType, target_team: enemyTeam, target_computer: selTarget}),
+  })
+  .then(r => r.json())
+  .then(res => {
+    if (res.error) { tprint(`> ERROR: ${res.error}`, 'err'); resetAttackUI(false); }
+    else { currentAttackId = res.attack_id; }
+  })
+  .catch(e => { tprint(`> NETWORK ERROR: ${e}`, 'err'); resetAttackUI(false); });
+}
+
+function resetAttackUI(success) {
+  isAttacking     = false;
+  currentAttackId = null;
+  attackBeam      = null;
+  const btn = document.getElementById('fire-btn');
+  btn.classList.remove('run-flash');
+  btn.textContent = 'EXECUTE';
+  document.getElementById('fire-bar').classList.remove('run');
+  document.getElementById('fire-status').textContent = success ? 'ATTACK COMPLETE' : (success === false ? 'FAILED' : 'READY');
+  if (success !== null) setTimeout(() => { document.getElementById('fire-status').textContent = 'READY'; }, 3500);
+  updateFireBtn();
+}
+
+/* ── under attack ───────────────────────────────────────────────────────── */
+function triggerUnderAttack(ev) {
+  const label = ev.attack_label || ev.attack_type || 'UNKNOWN';
+  const from  = `${(ev.attacker_team||'?').toUpperCase()}.${(ev.attacker_computer||'?').toUpperCase()}`;
+  const sev   = (ev.severity || '?').toUpperCase();
+  const ports = (ev.open_ports || []).slice(0, 3).join(', ') || 'N/A';
+
+  document.getElementById('atk-banner-title').textContent  = `⚠ INCOMING ${label.toUpperCase()} ⚠`;
+  document.getElementById('atk-banner-detail').textContent =
+    `FROM: ${from}  |  SEVERITY: ${sev}  |  PORTS: ${ports}`;
+  document.getElementById('atk-banner').classList.add('on');
+  document.getElementById('hdr-alert').classList.add('on');
+  document.getElementById('my-node-box').classList.add('atk');
+  document.getElementById('my-status').textContent = 'UNDER ATTACK';
+  document.body.classList.add('under-attack');
+
+  // radar rings from center
+  addScanRings(RCX, RCY, '#ff3333', 4);
+
+  atkReceived++;
+  document.getElementById('stat-rcv').textContent = atkReceived;
+
+  tprint('', '');
+  tprint('! ──────── INCOMING ATTACK ────────', 'err');
+  tprint(`! TYPE:     ${label.toUpperCase()}`, 'err');
+  tprint(`! FROM:     ${from}`, 'err');
+  tprint(`! SEVERITY: ${sev}`, 'err');
+  if (ev.open_ports && ev.open_ports.length) tprint(`! EXPOSED:  ${ev.open_ports.join(', ')}`, 'err');
+  tprint('! ─────────────────────────────────', 'err');
+
+  clearTimeout(underAttackTimer);
+  underAttackTimer = setTimeout(clearUnderAttack, 9000);
+}
+
+function clearUnderAttack() {
+  document.getElementById('atk-banner').classList.remove('on');
+  document.getElementById('hdr-alert').classList.remove('on');
+  document.getElementById('my-node-box').classList.remove('atk');
+  document.getElementById('my-status').textContent = 'IDLE';
+  document.body.classList.remove('under-attack');
+}
+
+/* ── event log ──────────────────────────────────────────────────────────── */
+function addLog(ev, dir) {
+  const feed  = document.getElementById('log-feed');
+  const row   = document.createElement('div');
+  row.className = `lentry ${dir}`;
+
+  const ts  = (ev.timestamp || '').substring(11, 19) || '--:--:--';
+  const atk = (ev.attack_label || ev.attack_type || '?').toUpperCase().substring(0, 12);
+  let desc  = '';
+  if (dir === 'out') {
+    const tgt = `${(ev.target_team||'?').toUpperCase()}.${(ev.target_computer||'?').toUpperCase()}`;
+    desc = `→ ${tgt} | ${atk}`;
+    if (ev.open_ports && ev.open_ports.length) desc += ` | ${ev.open_ports.slice(0,3).join(', ')}`;
+  } else if (dir === 'inc') {
+    const src = `${(ev.attacker_team||'?').toUpperCase()}.${(ev.attacker_computer||'?').toUpperCase()}`;
+    desc = `← ${src} | ${atk} | ${(ev.severity||'?').toUpperCase()}`;
+  } else {
+    const a = `${(ev.attacker_team||'?')}.${(ev.attacker_computer||'?')}`;
+    const t = `${(ev.target_team||'?')}.${(ev.target_computer||'?')}`;
+    desc = `${a} → ${t} | ${atk}`;
+  }
+  row.innerHTML = `<span class="ts">${ts}</span><span>${atk}</span><span>${desc}</span>`;
+  feed.insertBefore(row, feed.firstChild);
+  while (feed.children.length > 80) feed.removeChild(feed.lastChild);
+  logCount++;
+  document.getElementById('log-cnt').textContent = `${logCount} EVENTS`;
+}
+
+/* ── SSE handler ────────────────────────────────────────────────────────── */
+function handleMsg(msg) {
+  const type = msg.type;
+
+  if (type === 'init') {
+    if (msg.attack_types) { attackTypes = msg.attack_types; buildAttackTypeGrid(); }
+    updatePiStatus(msg.pi_connected);
+    if (msg.nodes) updateNodeStates(msg.nodes);
+    return;
+  }
+
+  if (type === 'pi') {
+    const inner = msg.data || {};
+
+    if (inner.type === 'event') {
+      const ev  = inner.data || {};
+      const myKey  = `${myTeam}.${myComp}`;
+      const tgtKey = `${ev.target_team||''}.${ev.target_computer||''}`;
+      const atkKey = `${ev.attacker_team||''}.${ev.attacker_computer||''}`;
+      if (tgtKey === myKey) {
+        triggerUnderAttack(ev);
+        addLog(ev, 'inc');
+      } else if (atkKey === myKey) {
+        addLog(ev, 'out');
+      } else {
+        addLog(ev, 'oth');
+      }
+    }
+
+    if (inner.type === 'nodes') {
+      updateNodeStates(inner.data || {});
+    }
+    return;
+  }
+
+  if (type === 'pi_status') {
+    updatePiStatus(msg.connected);
+    return;
+  }
+
+  if (type === 'attack_start') {
+    tprint(`> ATTACK VECTOR ESTABLISHED → ${(msg.target_team||'?').toUpperCase()}.${(msg.target_computer||'?').toUpperCase()} (${msg.target_ip||'?'})`, 'ok');
+    return;
+  }
+
+  if (type === 'attack_result') {
+    const e = msg.entry || {};
+    const p = e.open_ports || [];
+    tprint(`> RESULT: ${p.length ? p.length + ' PORT(S) FOUND' : 'NO OPEN PORTS'}`, p.length ? 'ok' : 'dim');
+    p.forEach(port => tprint(`>   ${port}`, 'warn'));
+    atkLaunched++;
+    document.getElementById('stat-atk').textContent = atkLaunched;
+    // pulse rings on target blip
+    const b = nodeBlips[selTarget];
+    if (b) addScanRings(b.x, b.y, teamColor());
+    addLog(e, 'out');
+    resetAttackUI(true);
+    return;
+  }
+
+  if (type === 'attack_error') {
+    tprint(`> ATTACK ERROR: ${msg.error || 'unknown'}`, 'err');
+    resetAttackUI(false);
+    return;
+  }
+}
+
+function updatePiStatus(connected) {
+  const el = document.getElementById('pi-indicator');
+  const ht = document.getElementById('pi-txt');
+  el.textContent = connected ? 'PI: CONNECTED' : 'PI: OFFLINE';
+  el.className   = connected ? 'ok' : 'off';
+  ht.textContent = connected ? 'PI: LIVE' : 'PI: OFFLINE';
+}
+
+function updateNodeStates(nodes) {
+  for (const [key, n] of Object.entries(nodes)) {
+    if (n.team === enemyTeam) {
+      const comp = n.computer;
+      const el   = document.getElementById(`est-${comp}`);
+      if (el) el.textContent = `STATUS: ${(n.status || 'idle').toUpperCase()}`;
+    }
+  }
+}
+
+/* ── SSE connect ────────────────────────────────────────────────────────── */
+function connect() {
+  const dot = document.getElementById('conn-dot');
+  const txt = document.getElementById('conn-txt');
+  const es  = new EventSource('/stream');
+
+  es.onopen = () => {
+    dot.style.background = 'var(--primary)';
+    dot.style.boxShadow  = '0 0 8px var(--primary)';
+    txt.textContent      = 'LIVE';
+  };
+  es.onmessage = ev => {
+    try { handleMsg(JSON.parse(ev.data)); } catch(e) { /* ignore */ }
+  };
+  es.onerror = () => {
+    dot.style.background = '#ff3333';
+    dot.style.boxShadow  = '0 0 8px #ff3333';
+    txt.textContent      = 'RECONNECTING...';
+    es.close();
+    setTimeout(connect, 3000);
+  };
+}
+
+/* ── init ───────────────────────────────────────────────────────────────── */
+(async function init() {
+  try {
+    const cfg = await fetch('/api/config').then(r => r.json());
+    myTeam      = cfg.team      || '';
+    myComp      = cfg.computer  || '';
+    enemyTeam   = cfg.enemy_team || '';
+    attackTypes = cfg.attack_types || {};
+    targets     = cfg.targets    || {};
+
+    // apply theme
+    if (myTeam === 'blue') document.body.classList.add('team-blue');
+    else if (myTeam === 'red') document.body.classList.add('team-red');
+
+    document.getElementById('node-label').textContent =
+      `${myTeam.toUpperCase()} TEAM :: NODE ${myComp.toUpperCase()}`;
+    document.title = `${myTeam.toUpperCase()}.${myComp.toUpperCase()} — REDBLUE`;
+
+    buildAttackTypeGrid();
+    buildTargetList();
+    sizeRadar();
+    drawRadar();
+
+    updatePiStatus(cfg.pi_connected);
+
+    // boot sequence
+    const lines = [
+      ['// REDBLUE OPERATOR CONSOLE ONLINE', 'ok'],
+      [`// IDENTITY: ${myTeam.toUpperCase()} TEAM :: NODE ${myComp.toUpperCase()}`, 'info'],
+      [`// MY IP:    ${cfg.my_ip || '?'}`, 'info'],
+      [`// ENEMY:    ${enemyTeam.toUpperCase()} TEAM — ${Object.keys(targets).length} TARGET(S)`, 'info'],
+      ['// SELECT ATTACK TYPE AND TARGET TO BEGIN', 'dim'],
+    ];
+    document.getElementById('terminal').innerHTML = '';
+    let delay = 0;
+    for (const [line, cls] of lines) {
+      setTimeout(() => tprint(line, cls), delay);
+      delay += 200;
+    }
+
+    // load history
+    const hist = await fetch('/api/history').then(r => r.json()).catch(() => []);
+    hist.slice(-20).forEach(ev => {
+      const myKey  = `${myTeam}.${myComp}`;
+      const tgtKey = `${ev.target_team||''}.${ev.target_computer||''}`;
+      const atkKey = `${ev.attacker_team||''}.${ev.attacker_computer||''}`;
+      if (tgtKey === myKey)      addLog(ev, 'inc');
+      else if (atkKey === myKey) addLog(ev, 'out');
+    });
+
+  } catch(e) {
+    tprint(`// INIT ERROR: ${e}`, 'err');
+    sizeRadar(); drawRadar();
+  }
+
+  connect();
+
+  // resize radar on window resize
+  window.addEventListener('resize', () => { sizeRadar(); });
+})();
+</script>
+</body>
+</html>

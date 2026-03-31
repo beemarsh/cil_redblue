@@ -28,6 +28,26 @@
   --border:    1px solid #00ff41;
 }
 
+/* ── team colour themes ──────────────────────────────────────────────── */
+body.team-blue {
+  --bg:      #000508;
+  --bg2:     #010a14;
+  --primary: #00ccff;
+  --dim:     #00304d;
+  --dim2:    #00507a;
+  --glow:    0 0 8px #00ccff, 0 0 20px #00ccff55;
+  --border:  1px solid #00ccff;
+}
+body.team-red {
+  --bg:      #080200;
+  --bg2:     #0d0300;
+  --primary: #ff5500;
+  --dim:     #3a1200;
+  --dim2:    #5c1e00;
+  --glow:    0 0 8px #ff5500, 0 0 20px #ff550055;
+  --border:  1px solid #ff5500;
+}
+
 /* ── body / CRT ────────────────────────────────────────────────────────── */
 html, body {
   height: 100%; width: 100%;
@@ -375,155 +395,100 @@ header {
 .log-line2 { color: var(--dim2); font-size: 15px; padding-left: 110px; }
 .log-ports span { color: #89dceb; }
 
-/* ── intrusion overlay ───────────────────────────────────────────────── */
-#intrusion-overlay {
-  display: none;
-  position: fixed; inset: 0;
-  z-index: 10000;
-  background: #060000;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-#intrusion-overlay.active { display: flex; animation: intrusion-shake .15s ease-in-out 4; }
-#intrusion-overlay::before {
-  content: '';
-  position: fixed; inset: 0;
+/* ── alert cards ─────────────────────────────────────────────────────── */
+#alerts-container {
+  position: fixed;
+  top: 95px;
+  right: 14px;
+  width: 400px;
   pointer-events: none;
-  background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(255,0,0,0.06) 3px, rgba(255,0,0,0.06) 6px);
-  animation: intrusion-scan 6s linear infinite;
+  z-index: 9000;
 }
-@keyframes intrusion-scan { from{background-position:0 0} to{background-position:0 100px} }
-@keyframes intrusion-shake {
+.alert-card {
+  position: absolute;
+  width: 390px;
+  right: 0;
+  background: rgba(2, 8, 2, 0.82);
+  border: 1px solid var(--primary);
+  padding: 10px 14px 8px;
+  pointer-events: all;
+  font-size: 17px;
+  backdrop-filter: blur(3px);
+  box-shadow: 0 0 14px var(--primary)44, 0 4px 20px rgba(0,0,0,0.6);
+  animation: ac-in 0.22s ease-out;
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+.alert-card.real-attack {
+  border: 2px solid var(--warn);
+  background: rgba(14, 2, 2, 0.9);
+  box-shadow: 0 0 24px #ff444466, 0 0 60px #ff444422, 0 4px 20px rgba(0,0,0,0.7);
+  animation: ac-in 0.22s ease-out, ac-shake 0.12s ease-in-out 4;
+}
+.alert-card.removing {
+  opacity: 0;
+  transform: translateX(30px) scale(0.93) !important;
+  pointer-events: none;
+}
+@keyframes ac-in {
+  from { opacity: 0; transform: translateX(28px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes ac-shake {
   0%,100% { transform: translateX(0); }
-  20%     { transform: translateX(-10px); }
-  40%     { transform: translateX(10px); }
-  60%     { transform: translateX(-7px); }
-  80%     { transform: translateX(7px); }
+  30%     { transform: translateX(-8px); }
+  70%     { transform: translateX(8px); }
 }
-#intrusion-box {
-  width: 80vw;
-  max-width: 900px;
-  border: 2px solid var(--warn);
-  background: #0a0000;
-  padding: 40px 50px;
-  text-align: center;
-  box-shadow: 0 0 40px #ff444499, 0 0 120px #ff444433, inset 0 0 60px #ff000011;
-  animation: intrusion-border-pulse .35s ease-in-out infinite alternate;
-  position: relative;
+.ac-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 5px;
+  border-bottom: 1px solid var(--dim);
+  padding-bottom: 5px;
 }
-#intrusion-box::before { content: '+'; position: absolute; top: 6px; left: 8px; color: var(--warn); font-size: 14px; }
-#intrusion-box::after  { content: '+'; position: absolute; top: 6px; right: 8px; color: var(--warn); font-size: 14px; }
-@keyframes intrusion-border-pulse {
-  from { box-shadow: 0 0 30px #ff444488, 0 0 80px #ff444422,  inset 0 0 40px #ff000011; border-color: #ff2222; }
-  to   { box-shadow: 0 0 60px #ff4444cc, 0 0 160px #ff444455, inset 0 0 80px #ff000022; border-color: #ff6666; }
-}
-#intrusion-title {
-  font-size: 52px;
-  letter-spacing: 6px;
+.ac-real-label {
   color: var(--warn);
-  text-shadow: 0 0 20px #ff4444, 0 0 50px #ff4444;
-  animation: intrusion-blink .5s step-end infinite;
-  margin-bottom: 10px;
+  font-size: 15px;
+  letter-spacing: 1px;
+  animation: blink .45s step-end infinite;
 }
-@keyframes intrusion-blink { 50% { opacity: 0.15; } }
-#intrusion-subtitle {
-  font-size: 22px;
-  color: #ff666699;
-  letter-spacing: 4px;
-  margin-bottom: 34px;
-}
-#intrusion-target-label {
-  font-size: 20px;
-  color: var(--dim2);
-  letter-spacing: 3px;
-  margin-bottom: 6px;
-}
-#intrusion-target-name {
-  font-size: 64px;
-  letter-spacing: 8px;
-  color: var(--warn);
-  text-shadow: 0 0 30px #ff4444, 0 0 60px #ff4444;
-  margin-bottom: 8px;
-  line-height: 1;
-}
-#intrusion-target-ip {
-  font-size: 22px;
-  color: #ff666677;
-  letter-spacing: 2px;
-  margin-bottom: 30px;
-}
-#intrusion-attacker {
-  font-size: 26px;
+.ac-type {
   color: var(--primary);
-  letter-spacing: 3px;
-  margin-bottom: 8px;
-}
-#intrusion-attacker span { color: var(--red); text-shadow: var(--glow-red); }
-#intrusion-attack-type {
-  display: inline-block;
-  font-size: 28px;
-  letter-spacing: 4px;
-  padding: 6px 20px;
-  border: 2px solid var(--warn);
-  color: var(--warn);
-  text-shadow: var(--glow-red);
-  box-shadow: var(--glow-red);
-  margin-bottom: 16px;
-}
-#intrusion-ports {
   font-size: 18px;
-  color: #89dceb;
-  letter-spacing: 2px;
-  margin-bottom: 30px;
-  min-height: 24px;
+  letter-spacing: 1px;
+  text-shadow: var(--glow);
+  flex: 1;
 }
-#intrusion-progress-wrap {
+.ac-sev { font-size: 15px; letter-spacing: 1px; }
+.ac-sev.low      { color: var(--primary); }
+.ac-sev.medium   { color: var(--attacking); }
+.ac-sev.high     { color: #ff6600; }
+.ac-sev.critical { color: var(--warn); animation: blink .5s infinite; }
+.ac-route {
+  font-size: 20px;
+  letter-spacing: 1px;
+  margin-bottom: 3px;
+}
+.ac-route .ac-atk-red  { color: var(--red);  text-shadow: var(--glow-red); }
+.ac-route .ac-atk-blue { color: var(--blue); text-shadow: var(--glow-blue); }
+.ac-route .ac-arrow    { color: var(--dim2); }
+.ac-route .ac-tgt      { color: var(--primary); }
+.ac-ip    { font-size: 15px; color: var(--dim2); margin-bottom: 3px; }
+.ac-ports { font-size: 14px; color: #89dceb; letter-spacing: 1px; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ac-bar-wrap {
   width: 100%;
-  height: 6px;
-  background: #1a0000;
-  border: 1px solid #ff444444;
-  margin-bottom: 14px;
+  height: 3px;
+  background: var(--dim);
   overflow: hidden;
+  margin-top: 4px;
 }
-#intrusion-progress {
+.ac-bar {
   height: 100%;
-  background: var(--warn);
-  box-shadow: 0 0 10px var(--warn);
-  transition: width 1s linear;
+  width: 100%;
+  background: var(--primary);
+  box-shadow: 0 0 6px var(--primary);
 }
-#intrusion-dismiss {
-  font-size: 18px;
-  color: #ff666677;
-  letter-spacing: 2px;
-  animation: blink 1.2s infinite;
-}
-/* keep the old warn-box referenced (replaced below) */
-#warn-box {
-  border: 2px solid var(--warn);
-  background: #0a0000;
-  padding: 28px 36px;
-  max-width: 460px;
-  text-align: center;
-  box-shadow: var(--glow-red), 0 0 60px var(--warn)44;
-  animation: warn-border .4s ease-in-out infinite alternate;
-  cursor: pointer;
-}
-@keyframes warn-border {
-  from { border-color: #ff444488; box-shadow: 0 0 10px #ff444466; }
-  to   { border-color: var(--warn); box-shadow: var(--glow-red), 0 0 60px var(--warn)44; }
-}
-#warn-header {
-  font-size: 30px;
-  color: var(--warn);
-  text-shadow: var(--glow-red);
-  letter-spacing: 3px;
-  margin-bottom: 16px;
-  animation: blink .5s infinite;
-}
-#warn-body { font-size: 16px; color: var(--primary); line-height: 1.7; }
-#warn-dismiss { font-size: 12px; color: var(--dim2); margin-top: 14px; letter-spacing: 1px; }
+.alert-card.real-attack .ac-bar { background: var(--warn); box-shadow: 0 0 6px var(--warn); }
 
 /* ── boot overlay ────────────────────────────────────────────────────── */
 #boot-overlay {
@@ -615,23 +580,8 @@ header {
   </div>
 </div>
 
-<!-- ── intrusion overlay ─────────────────────────────────────────────────── -->
-<div id="intrusion-overlay" onclick="dismissIntrusion()">
-  <div id="intrusion-box">
-    <div id="intrusion-title">!! INTRUSION DETECTED !!</div>
-    <div id="intrusion-subtitle">ACTIVE THREAT ON YOUR NETWORK</div>
-    <div id="intrusion-target-label">TARGET SYSTEM</div>
-    <div id="intrusion-target-name">—</div>
-    <div id="intrusion-target-ip">—</div>
-    <div id="intrusion-attacker">ATTACKER: <span id="itr-attacker">—</span></div>
-    <div id="intrusion-attack-type">—</div>
-    <div id="intrusion-ports"></div>
-    <div id="intrusion-progress-wrap">
-      <div id="intrusion-progress" style="width:100%"></div>
-    </div>
-    <div id="intrusion-dismiss">[ CLICK TO DISMISS ]  RESUMING IN <span id="itr-timer">10</span>s</div>
-  </div>
-</div>
+<!-- ── stacking alert cards ───────────────────────────────────────────── -->
+<div id="alerts-container"></div>
 
 <!-- ── main app ───────────────────────────────────────────────────────────── -->
 <div id="app">
@@ -790,9 +740,13 @@ let _warnTimer = null;
     }
     data[W - 1] = Math.max(0.02, Math.min(0.98, sample));
 
+    const tc  = window._teamColor    || '#00ff41';
+    const tcd = window._teamColorDim || '#003a0f88';
+    const tcg = window._teamColorGrid|| '#001a04';
+
     // draw background grid
     ctx.clearRect(0, 0, W, H);
-    ctx.strokeStyle = '#001a04';
+    ctx.strokeStyle = tcg;
     ctx.lineWidth = 1;
     for (let y = 0; y < H; y += 12) {
       ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke();
@@ -803,7 +757,7 @@ let _warnTimer = null;
 
     // afterglow trace
     ctx.beginPath();
-    ctx.strokeStyle = '#003a0f88';
+    ctx.strokeStyle = tcd;
     ctx.lineWidth = 1;
     for (let i = 0; i < W; i++) {
       const y = H - data[i] * H;
@@ -813,9 +767,9 @@ let _warnTimer = null;
 
     // bright trace
     ctx.beginPath();
-    ctx.strokeStyle = '#00ff41';
+    ctx.strokeStyle = tc;
     ctx.lineWidth = 1.5;
-    ctx.shadowColor = '#00ff41';
+    ctx.shadowColor = tc;
     ctx.shadowBlur = 4;
     for (let i = 0; i < W; i++) {
       const y = H - data[i] * H;
@@ -1162,52 +1116,80 @@ function addEventToLog(ev) {
   document.getElementById('cnt-total').textContent = redCount + blueCount;
 }
 
-/* ── intrusion overlay ────────────────────────────────────────────────── */
-let _intrusionTimer = null;
-let _intrusionCountdown = 10;
+/* ── stacking alert cards ─────────────────────────────────────────────── */
+let _activeAlerts = [];
+let _alertZ = 200;
 
-function showIntrusionAlert(ev) {
-  const atk = `${ev.attacker_team||'?'}.${ev.attacker_computer||'?'}`;
-  const tgt = `${ev.target_team||'?'}.${ev.target_computer||'?'}`;
+function showAlertCard(ev) {
+  const container = document.getElementById('alerts-container');
+  const isReal    = !!ev.real;
+  const sev       = ev.severity || 'low';
+  const atk       = `${ev.attacker_team||'?'}.${ev.attacker_computer||'?'}`;
+  const tgt       = `${ev.target_team||'?'}.${ev.target_computer||'?'}`;
+  const atkTeam   = ev.attacker_team || '';
+  const ports     = (ev.open_ports || []).join('  ·  ');
 
-  document.getElementById('intrusion-target-name').textContent = tgt.toUpperCase();
-  document.getElementById('intrusion-target-ip').textContent   = ev.target_ip || '—';
-  document.getElementById('itr-attacker').textContent          = atk.toUpperCase();
-  document.getElementById('intrusion-attack-type').textContent = (ev.attack_label || ev.attack_type || '?').toUpperCase();
+  // Cap visible cards at 6 — remove oldest
+  if (_activeAlerts.length >= 6) _removeAlertCard(_activeAlerts[0]);
 
-  const ports = ev.open_ports || [];
-  document.getElementById('intrusion-ports').textContent =
-    ports.length ? 'EXPOSED PORTS: ' + ports.join('  |  ') : '';
+  const card = document.createElement('div');
+  card.className = `alert-card${isReal ? ' real-attack' : ''}`;
 
-  const ov = document.getElementById('intrusion-overlay');
-  ov.classList.add('active');
+  // Staggered pile: each card slightly lower and rotated
+  const idx  = _activeAlerts.length;
+  const topO = idx * 24;
+  const rot  = (Math.random() - 0.5) * 3;
+  const xO   = Math.floor((Math.random() - 0.5) * 18);
+  card.style.cssText = `top:${topO}px; right:${Math.max(0,-xO)}px; z-index:${++_alertZ}; transform:rotate(${rot}deg)`;
 
-  // Stop simulation while intrusion is displayed
-  fetch('/api/simulate', {method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({action:'stop'})}).catch(()=>{});
+  const realLabel = isReal ? `<span class="ac-real-label">!! REAL !!</span>` : '';
+  card.innerHTML = `
+    <div class="ac-top">
+      ${realLabel}
+      <span class="ac-type">${escHtml((ev.attack_label||ev.attack_type||'?').toUpperCase())}</span>
+      <span class="ac-sev ${sev}">[${sev.toUpperCase()}]</span>
+    </div>
+    <div class="ac-route">
+      <span class="ac-atk-${escHtml(atkTeam)}">${escHtml(atk.toUpperCase())}</span>
+      <span class="ac-arrow"> ──► </span>
+      <span class="ac-tgt">${escHtml(tgt.toUpperCase())}</span>
+    </div>
+    ${ev.target_ip ? `<div class="ac-ip">${escHtml(ev.target_ip)}</div>` : ''}
+    ${ports         ? `<div class="ac-ports">${escHtml(ports)}</div>` : ''}
+    <div class="ac-bar-wrap"><div class="ac-bar"></div></div>
+  `;
 
-  // Countdown
-  _intrusionCountdown = 10;
-  const prog  = document.getElementById('intrusion-progress');
-  const timer = document.getElementById('itr-timer');
-  prog.style.transition = 'none';
-  prog.style.width = '100%';
+  container.appendChild(card);
+  _activeAlerts.push(card);
 
-  if (_intrusionTimer) clearInterval(_intrusionTimer);
-  _intrusionTimer = setInterval(() => {
-    _intrusionCountdown--;
-    if (timer) timer.textContent = _intrusionCountdown;
-    if (prog)  prog.style.width = (_intrusionCountdown / 10 * 100) + '%';
-    if (_intrusionCountdown <= 0) dismissIntrusion();
-  }, 1000);
+  // Animate progress bar draining over 3s
+  const bar = card.querySelector('.ac-bar');
+  requestAnimationFrame(() => {
+    bar.style.transition = 'width 3s linear';
+    bar.style.width = '0%';
+  });
+
+  // Real attacks stop simulation for their duration
+  if (isReal) {
+    fetch('/api/simulate', {method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({action:'stop'})}).catch(()=>{});
+  }
+
+  setTimeout(() => {
+    _removeAlertCard(card);
+    // Restart simulation after real-attack card expires
+    if (isReal && _activeAlerts.filter(c => c.classList.contains('real-attack')).length === 0) {
+      fetch('/api/simulate', {method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({action:'start'})}).catch(()=>{});
+    }
+  }, 3000);
 }
 
-function dismissIntrusion() {
-  document.getElementById('intrusion-overlay').classList.remove('active');
-  if (_intrusionTimer) { clearInterval(_intrusionTimer); _intrusionTimer = null; }
-  // Restart simulation after dismissal
-  fetch('/api/simulate', {method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({action:'start'})}).catch(()=>{});
+function _removeAlertCard(card) {
+  if (!card || !card.parentNode) return;
+  card.classList.add('removing');
+  _activeAlerts = _activeAlerts.filter(c => c !== card);
+  setTimeout(() => { if (card.parentNode) card.parentNode.removeChild(card); }, 370);
 }
 
 
@@ -1247,8 +1229,8 @@ function handleSSEMessage(msg) {
                     ev.severity === 'medium'   ? 0.55 : 0.35;
     if (window._oscSpike) window._oscSpike(ev.real ? Math.min(1, baseMag + 0.25) : baseMag);
 
-    // Intrusion overlay only for real attacks
-    if (ev.real) showIntrusionAlert(ev);
+    // Show alert card for all events (real ones get extra styling)
+    showAlertCard(ev);
     return;
   }
 
@@ -1296,6 +1278,19 @@ function connect() {
   if (cfgRes.status   === 'fulfilled') myTeam   = cfgRes.value.my_team || '';
   if (nodesRes.status === 'fulfilled') nodes    = nodesRes.value;
   if (atkRes.status   === 'fulfilled') atkTypes = atkRes.value;
+
+  // Apply team theme
+  if (myTeam === 'blue') {
+    document.body.classList.add('team-blue');
+    window._teamColor     = '#00ccff';
+    window._teamColorDim  = '#003a5088';
+    window._teamColorGrid = '#001830';
+  } else if (myTeam === 'red') {
+    document.body.classList.add('team-red');
+    window._teamColor     = '#ff5500';
+    window._teamColorDim  = '#3a120088';
+    window._teamColorGrid = '#220a00';
+  }
 
   buildTopology(nodes);
   buildNodeGrid(nodes);

@@ -27,6 +27,7 @@ fi
 WORKDIR="$(cd "$(dirname "$0")" && pwd)"
 VENV="$WORKDIR/.venv"
 SERVICE="redblue-attack"
+SERVICE_DASH="redblue-dashboard"
 
 # ── 1. Virtual environment ────────────────────────────────────────────────────
 echo "==> Creating virtual environment..."
@@ -58,19 +59,48 @@ systemctl enable "$SERVICE"
 systemctl restart "$SERVICE"
 echo "    OK"
 
-# ── 3. Summary ────────────────────────────────────────────────────────────────
+# ── 3. Operator dashboard service ─────────────────────────────────────────────
+echo "==> Registering systemd service: $SERVICE_DASH..."
+cat > "/etc/systemd/system/$SERVICE_DASH.service" <<EOF
+[Unit]
+Description=RedBlue operator dashboard ($TEAM.$COMPUTER)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+WorkingDirectory=$WORKDIR
+ExecStart=$VENV/bin/python3 $WORKDIR/computer_server.py --team $TEAM --computer $COMPUTER --config $WORKDIR/config.yaml
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl daemon-reload
+systemctl enable "$SERVICE_DASH"
+systemctl restart "$SERVICE_DASH"
+echo "    OK"
+
+# ── 4. Summary ────────────────────────────────────────────────────────────────
 echo ""
 echo "======================================================"
 echo "  Team machine ready: $TEAM.$COMPUTER"
-echo "  Service '$SERVICE' is running and enabled on boot."
+echo ""
+echo "  Services running and enabled on boot:"
+echo "    $SERVICE       — automated attack loop"
+echo "    $SERVICE_DASH  — operator dashboard (port 8080)"
+echo ""
+echo "  OPERATOR DASHBOARD:"
+echo "    http://$(hostname -I | awk '{print $1}'):8080/"
 echo ""
 echo "  Useful commands:"
 echo "    sudo systemctl status  $SERVICE"
-echo "    sudo journalctl -u     $SERVICE -f"
-echo "    sudo systemctl stop    $SERVICE"
-echo "    sudo systemctl restart $SERVICE"
+echo "    sudo systemctl status  $SERVICE_DASH"
+echo "    sudo journalctl -u     $SERVICE_DASH -f"
+echo "    sudo systemctl restart $SERVICE_DASH"
 echo ""
-echo "  To run manually (outside the service):"
+echo "  To run dashboard manually:"
 echo "    source $WORKDIR/activate.sh"
-echo "    python3 attack.py --team $TEAM --computer $COMPUTER"
+echo "    python3 computer_server.py --team $TEAM --computer $COMPUTER"
 echo "======================================================"
