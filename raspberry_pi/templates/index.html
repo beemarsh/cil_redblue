@@ -607,6 +607,28 @@ select.term-select:focus { border-color: var(--primary); box-shadow: var(--glow)
 @keyframes node-atk-anim   { from{opacity:.7} to{opacity:1} }
 @keyframes node-ua-anim    { from{opacity:.4} to{opacity:1} }
 
+/* ── real attack highlights ─────────────────────────────────────────── */
+.real-event {
+  border-left: 3px solid var(--warn) !important;
+  background: #1a00001a !important;
+  animation: real-flash 0.4s ease-out 3;
+}
+@keyframes real-flash {
+  0%   { background: #ff444433; }
+  100% { background: #1a00001a; }
+}
+.real-badge {
+  display: inline-block;
+  background: var(--warn);
+  color: #000;
+  font-size: 11px;
+  padding: 0 5px;
+  margin-right: 4px;
+  font-weight: bold;
+  animation: badge-blink 0.6s step-end infinite;
+}
+@keyframes badge-blink { 50% { opacity: 0; } }
+
 /* scrollbars */
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
@@ -693,28 +715,6 @@ select.term-select:focus { border-color: var(--primary); box-shadow: var(--glow)
         <div id="alert-feed"></div>
       </div>
 
-      <div id="cmd-section">
-        <div class="cmd-title">// EXECUTE COMMAND</div>
-        <div class="cmd-row">
-          <div>
-            <div class="cmd-label">FROM NODE</div>
-            <select class="term-select" id="cmd-from"></select>
-          </div>
-          <div>
-            <div class="cmd-label">TO NODE</div>
-            <select class="term-select" id="cmd-to"></select>
-          </div>
-        </div>
-        <div class="cmd-row full">
-          <div>
-            <div class="cmd-label">ATTACK TYPE</div>
-            <select class="term-select" id="cmd-atype"></select>
-          </div>
-        </div>
-        <button id="btn-execute" onclick="executeCommand()">[ EXECUTE ]</button>
-        <div id="cmd-feedback"></div>
-      </div>
-
       <div id="sim-section">
         <button id="btn-simulate" onclick="toggleSim()">[ &#9654; START SIMULATION ]</button>
       </div>
@@ -754,6 +754,7 @@ function fmtHms(d) {
 /* ── state ────────────────────────────────────────────────────────────── */
 let nodes     = {};    // key -> node obj
 let atkTypes  = {};    // key -> {label, severity, color}
+let myTeam    = '';    // this Pi's team — set from /api/config
 let logCount  = 0;
 let redCount  = 0, blueCount = 0;
 let _builtUI  = false;
@@ -876,28 +877,76 @@ function buildTopology(nodeData) {
   const cx   = W / 2, cy = H / 2;
   topoNodePositions = {};
 
+  // Filter to only this team's nodes if myTeam is set
+  const visible = Object.fromEntries(
+    Object.entries(nodeData).filter(([, n]) => !myTeam || n.team === myTeam)
+  );
+
   // Group by team
   const byTeam = {};
-  for (const [k, n] of Object.entries(nodeData)) {
+  for (const [k, n] of Object.entries(visible)) {
     byTeam[n.team] = byTeam[n.team] || [];
     byTeam[n.team].push({key: k, ...n});
   }
   const teamNames = Object.keys(byTeam);
 
-  // Assign sides: first team left, second right, extras spread
+  // Single-team mode: nodes on left, hub center-right, external threat indicator on right
+  const singleTeam = teamNames.length === 1;
+
+  // Assign sides
   const sides = {};
-  teamNames.forEach((t, i) => { sides[t] = i === 0 ? 'left' : 'right'; });
+  teamNames.forEach((t, i) => { sides[t] = singleTeam ? 'left' : (i === 0 ? 'left' : 'right'); });
 
   // Position nodes
   for (const [team, ns] of Object.entries(byTeam)) {
     const side = sides[team];
-    const xBase = side === 'left' ? W * 0.2 : W * 0.8;
+    const xBase = side === 'left' ? (singleTeam ? W * 0.25 : W * 0.2) : W * 0.8;
     const count = ns.length;
     ns.forEach((n, i) => {
       const yStep = H / (count + 1);
       const y = yStep * (i + 1);
       topoNodePositions[n.key] = {x: xBase, y};
     });
+  }
+
+  // In single-team mode, draw an "EXTERNAL" threat node on the right
+  if (singleTeam) {
+    const extG    = document.createElementNS(SVG_NS, 'g');
+    extG.id       = 'topo-external';
+    const extX    = W * 0.82, extY = cy;
+    const extRect = document.createElementNS(SVG_NS, 'rect');
+    extRect.setAttribute('x', extX - 28); extRect.setAttribute('y', extY - 14);
+    extRect.setAttribute('width', 56);    extRect.setAttribute('height', 28);
+    extRect.setAttribute('rx', 4);
+    extRect.setAttribute('fill', '#1a0000');
+    extRect.setAttribute('stroke', '#ff444488');
+    extRect.setAttribute('stroke-width', '1');
+    extRect.setAttribute('stroke-dasharray', '3 2');
+    const extTxt = document.createElementNS(SVG_NS, 'text');
+    extTxt.setAttribute('x', extX); extTxt.setAttribute('y', extY - 2);
+    extTxt.setAttribute('text-anchor', 'middle');
+    extTxt.setAttribute('fill', '#ff4444aa');
+    extTxt.setAttribute('font-family', "'VT323',monospace");
+    extTxt.setAttribute('font-size', '11');
+    extTxt.textContent = 'EXTERNAL';
+    const extTxt2 = document.createElementNS(SVG_NS, 'text');
+    extTxt2.setAttribute('x', extX); extTxt2.setAttribute('y', extY + 10);
+    extTxt2.setAttribute('text-anchor', 'middle');
+    extTxt2.setAttribute('fill', '#ff4444aa');
+    extTxt2.setAttribute('font-family', "'VT323',monospace");
+    extTxt2.setAttribute('font-size', '11');
+    extTxt2.textContent = 'THREAT';
+    extG.appendChild(extRect);
+    extG.appendChild(extTxt);
+    extG.appendChild(extTxt2);
+    svg.appendChild(extG);
+    // line from hub to external
+    const extLine = document.createElementNS(SVG_NS, 'line');
+    extLine.setAttribute('x1', cx + 12); extLine.setAttribute('y1', cy);
+    extLine.setAttribute('x2', extX - 28); extLine.setAttribute('y2', extY);
+    extLine.setAttribute('class', 'topo-link');
+    extLine.setAttribute('stroke', '#ff444444');
+    svg.appendChild(extLine);
   }
 
   // Draw hub
@@ -975,8 +1024,16 @@ function updateTopoNodeStatus(key, status) {
 
 function animateTopoAttack(atkKey, tgtKey, color) {
   const svg  = document.getElementById('topo-svg');
-  const aPos = topoNodePositions[atkKey];
-  const tPos = topoNodePositions[tgtKey];
+  const W    = svg.clientWidth || 280, H = svg.clientHeight || 300;
+  const cx   = W / 2, cy = H / 2;
+
+  let aPos = topoNodePositions[atkKey];
+  let tPos = topoNodePositions[tgtKey];
+
+  // Handle external (off-topology) attacker — animate from external threat box
+  if (!aPos && tPos)  aPos = { x: W * 0.82, y: cy };
+  // Handle external target — animate toward external threat box
+  if (!tPos && aPos)  tPos = { x: W * 0.82, y: cy };
   if (!aPos || !tPos) return;
 
   const W = svg.clientWidth || 280, H = svg.clientHeight || 300;
@@ -1044,6 +1101,7 @@ function buildNodeGrid(nodeData) {
   const grid = document.getElementById('nodes-grid');
   grid.innerHTML = '';
   for (const [key, n] of Object.entries(nodeData)) {
+    if (myTeam && n.team !== myTeam) continue;   // filter to this Pi's team
     const card = document.createElement('div');
     card.className = `node-card ${n.status || 'idle'}`;
     card.id = `nc-${key.replace('.','_')}`;
@@ -1103,18 +1161,18 @@ function addAlert(ev) {
   const feed = document.getElementById('alert-feed');
   const sev  = ev.severity || 'low';
   const div  = document.createElement('div');
-  div.className = `alert-entry sev-${sev}`;
+  div.className = `alert-entry sev-${sev}${ev.real ? ' real-event' : ''}`;
 
-  const atk = `${escHtml(ev.attacker_team||'?')}.${escHtml(ev.attacker_computer||'?')}`;
-  const tgt = `${escHtml(ev.target_team||'?')}.${escHtml(ev.target_computer||'?')}`;
+  const atk    = `${escHtml(ev.attacker_team||'?')}.${escHtml(ev.attacker_computer||'?')}`;
+  const tgt    = `${escHtml(ev.target_team||'?')}.${escHtml(ev.target_computer||'?')}`;
+  const realBadge = ev.real ? '<span class="real-badge">!! REAL !!</span> ' : '';
   div.innerHTML = `
     <span class="alert-ts">${escHtml(fmtTime(ev.timestamp))}</span>
     <span class="sev-badge ${sev}">[${sev.toUpperCase()}]</span>
-    <span class="alert-body"> ${atk} ──► ${tgt} :: ${escHtml(ev.attack_label||ev.attack_type||'?')}</span>
+    ${realBadge}<span class="alert-body"> ${atk} ──► ${tgt} :: ${escHtml(ev.attack_label||ev.attack_type||'?')}</span>
   `;
 
   feed.insertBefore(div, feed.firstChild);
-  // trim
   while (feed.children.length > 40) feed.removeChild(feed.lastChild);
 }
 
@@ -1138,11 +1196,12 @@ function addEventToLog(ev) {
   }
 
   const div = document.createElement('div');
-  div.className = 'log-entry';
+  div.className = `log-entry${ev.real ? ' real-event' : ''}`;
+  const realTag = ev.real ? '<span class="real-badge">REAL</span> ' : '';
   div.innerHTML = `
     <div class="log-line1">
       <span class="log-ts">[${escHtml(fmtTime(ev.timestamp))}]</span>
-      <span class="log-atk ${escHtml(team)}">${escHtml(atk.toUpperCase())}</span>
+      ${realTag}<span class="log-atk ${escHtml(team)}">${escHtml(atk.toUpperCase())}</span>
       <span class="log-arrow"> ──► </span>
       <span class="log-tgt">${escHtml(tgt.toUpperCase())}</span>
       <span class="log-ip">(${escHtml(ev.target_ip||'?')})</span>
@@ -1278,7 +1337,6 @@ function handleSSEMessage(msg) {
     if (!_builtUI) {
       buildTopology(nodes);
       buildNodeGrid(nodes);
-      populateCommandForm(nodes, atkTypes);
       _builtUI = true;
     }
     return;
@@ -1300,14 +1358,14 @@ function handleSSEMessage(msg) {
     const tgtKey = `${ev.target_team}.${ev.target_computer}`;
     animateTopoAttack(atkKey, tgtKey, ev.color);
 
-    if (window._oscSpike) window._oscSpike(
-      ev.severity === 'critical' ? 0.95 :
-      ev.severity === 'high'     ? 0.75 :
-      ev.severity === 'medium'   ? 0.55 : 0.35
-    );
+    // Real attacks spike harder and last longer on the oscilloscope
+    const baseMag = ev.severity === 'critical' ? 0.95 : ev.severity === 'high' ? 0.75 :
+                    ev.severity === 'medium'   ? 0.55 : 0.35;
+    if (window._oscSpike) window._oscSpike(ev.real ? Math.min(1, baseMag + 0.25) : baseMag);
 
+    // Show warning for all real attacks; for sim only on high/critical
     const sev = ev.severity || 'low';
-    if (sev === 'critical' || sev === 'high') showWarning(ev);
+    if (ev.real || sev === 'critical' || sev === 'high') showWarning(ev);
     return;
   }
 
@@ -1341,37 +1399,36 @@ function connect() {
   };
 }
 
+/* ── command form + executeCommand removed (no browser-side execution) ── */
+
 /* ── init ─────────────────────────────────────────────────────────────── */
 (async function init() {
-  // Fire parallel requests
-  const [nodesRes, atkRes, histRes, simRes] = await Promise.allSettled([
+  const [nodesRes, atkRes, histRes, cfgRes, simRes] = await Promise.allSettled([
     fetch('/api/nodes').then(r => r.json()),
     fetch('/api/attack-types').then(r => r.json()),
     fetch('/api/history').then(r => r.json()),
+    fetch('/api/config').then(r => r.json()),
     fetch('/api/simulate/status').then(r => r.json()),
   ]);
 
+  if (cfgRes.status  === 'fulfilled') myTeam   = cfgRes.value.my_team || '';
   if (nodesRes.status === 'fulfilled') nodes    = nodesRes.value;
-  if (atkRes.status  === 'fulfilled') atkTypes = atkRes.value;
+  if (atkRes.status  === 'fulfilled')  atkTypes = atkRes.value;
 
-  // Build UI from REST data (SSE init will update it too)
   buildTopology(nodes);
   buildNodeGrid(nodes);
-  populateCommandForm(nodes, atkTypes);
   _builtUI = true;
 
-  // Load history
   if (histRes.status === 'fulfilled' && Array.isArray(histRes.value)) {
-    // Oldest first so prepend works correctly
     [...histRes.value].reverse().forEach(ev => {
       addEventToLog(ev);
       addAlert(ev);
     });
   }
 
+  // Simulation auto-starts on server boot; reflect that in the button
   if (simRes.status === 'fulfilled') updateSimBtn(simRes.value.running);
 
-  // Connect SSE
   connect();
 })();
 </script>

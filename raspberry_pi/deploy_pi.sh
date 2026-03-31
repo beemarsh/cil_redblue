@@ -9,12 +9,19 @@
 set -euo pipefail
 
 PORT=5000
+TEAM=""
 while [[ $# -gt 0 ]]; do
   case $1 in
     --port) PORT="$2"; shift 2 ;;
+    --team) TEAM="$2"; shift 2 ;;
     *) echo "Unknown argument: $1"; exit 1 ;;
   esac
 done
+
+if [[ -z "$TEAM" ]]; then
+  echo "Usage: sudo ./deploy_pi.sh --team <blue|red> [--port 5000]"
+  exit 1
+fi
 
 WORKDIR="$(cd "$(dirname "$0")" && pwd)"
 VENV="$WORKDIR/.venv"
@@ -37,7 +44,7 @@ Wants=network-online.target
 
 [Service]
 WorkingDirectory=$WORKDIR
-ExecStart=$VENV/bin/python3 $WORKDIR/server.py --port $PORT
+ExecStart=$VENV/bin/python3 $WORKDIR/server.py --port $PORT --team $TEAM
 Restart=on-failure
 RestartSec=5
 
@@ -55,6 +62,7 @@ PI_IP="$(hostname -I | awk '{print $1}')"
 echo ""
 echo "======================================================"
 echo "  Raspberry Pi log server is running."
+echo "  Team: $TEAM"
 echo "  Service '$SERVICE' is enabled on boot."
 echo ""
 echo "  Dashboard: http://$PI_IP:$PORT/"

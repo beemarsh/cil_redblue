@@ -120,6 +120,9 @@ node_states: dict = {}
 _sim_running = False
 _sim_thread: threading.Thread | None = None
 
+# Which team this Pi belongs to (set via --team arg; empty = show all)
+_my_team: str = ""
+
 # ── config + node bootstrap ──────────────────────────────────────────────────
 
 def load_config(path: str) -> dict:
@@ -207,13 +210,18 @@ def process_event(event: dict) -> dict:
     attacker_key = f"{event.get('attacker_team','?')}.{event.get('attacker_computer','?')}"
     target_key   = f"{event.get('target_team','?')}.{event.get('target_computer','?')}"
 
+    # Real attacks (from actual machines) get longer highlight and a flag
+    is_real = event.get("source") not in ("simulation", "manual")
+    event["real"] = is_real
+    reset_delay = 20.0 if is_real else 10.0
+
     # Update attacker node
     if attacker_key in node_states:
         node_states[attacker_key]["status"] = "attacking"
         node_states[attacker_key]["last_event"] = event["timestamp"]
         node_states[attacker_key]["attack_count"] += 1
         node_states[attacker_key]["attack_type"] = atype["label"]
-        _reset_node_after(attacker_key, 10.0)
+        _reset_node_after(attacker_key, reset_delay)
 
     # Update target node
     if target_key in node_states:
@@ -221,7 +229,7 @@ def process_event(event: dict) -> dict:
         node_states[target_key]["last_event"] = event["timestamp"]
         node_states[target_key]["attacker"] = attacker_key
         node_states[target_key]["attack_type"] = atype["label"]
-        _reset_node_after(target_key, 10.0)
+        _reset_node_after(target_key, reset_delay)
 
     log_history.append(event)
     broadcast(json.dumps({"type": "event", "data": event}))
@@ -350,7 +358,7 @@ def api_nodes():
 
 @app.route("/api/config")
 def api_config():
-    return jsonify(_config)
+    return jsonify({**_config, "my_team": _my_team})
 
 
 @app.route("/api/history")
@@ -462,23 +470,31 @@ def stream():
 # ── entry point ───────────────────────────────────────────────────────────────
 
 def main():
-    global _config, node_states
+    global _config, node_states, _my_team
 
     parser = argparse.ArgumentParser(description="RedBlue Security Ops — Log Server")
-    parser.add_argument("--port", type=int, default=5000, help="Listening port (default 5000)")
+    parser.add_argument("--port",   type=int, default=5000,
+                        help="Listening port (default 5000)")
     parser.add_argument("--config", default=os.path.join(os.path.dirname(__file__), "../config.yaml"),
                         help="Path to config.yaml")
+    parser.add_argument("--team",   default="",
+                        help="This Pi's team (blue or red). Filters the dashboard to show only that team's nodes.")
     args = parser.parse_args()
 
-    _config = load_config(args.config)
+    _my_team    = args.team.lower().strip()
+    _config     = load_config(args.config)
     node_states = build_node_states(_config)
 
     print(f"[BOOT] RedBlue Security Ops Server")
+    print(f"[BOOT] Team    : {_my_team or 'all (no filter)'}")
     print(f"[BOOT] Config  : {args.config}")
     print(f"[BOOT] Nodes   : {list(node_states.keys())}")
     print(f"[BOOT] Attacks : {list(ATTACK_TYPES.keys())}")
     print(f"[BOOT] Listening on 0.0.0.0:{args.port}")
     print(f"[BOOT] Dashboard: http://localhost:{args.port}/")
+
+    # Start simulation automatically on boot
+    start_simulation()
 
     app.run(host="0.0.0.0", port=args.port, threaded=True)
 
